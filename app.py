@@ -106,29 +106,42 @@ if not st.session_state.exam_started:
 # --- 2. EXAM INTERFACE ---
 elif not st.session_state.submitted:
     
-    # --- LIVE JAVASCRIPT TIMER ---
-    # We inject a small script that counts down independently of Python
+    # --- ROBUST LIVE TIMER ---
+    # Calcoliamo il timestamp finale
     end_timestamp = st.session_state.end_time
     
+    # Inseriamo il timer nella sidebar con un controllo di sicurezza in JS
     st.sidebar.markdown(f"""
         <div style="text-align: center; padding: 10px; background-color: #f0f2f6; border-radius: 10px; margin-bottom: 20px;">
             <h3 style="margin:0; color: #333;">⏳ Time Remaining</h3>
-            <div id="countdown" style="font-size: 24px; font-weight: bold; color: #ff4b4b;">Loading...</div>
+            <div id="countdown" style="font-size: 24px; font-weight: bold; color: #ff4b4b;">--:--</div>
         </div>
         <script>
-        var countDownDate = {end_timestamp} * 1000;
-        var x = setInterval(function() {{
-          var now = new Date().getTime();
-          var distance = countDownDate - now;
-          var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-          var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-          minutes = minutes < 10 ? "0" + minutes : minutes;
-          seconds = seconds < 10 ? "0" + seconds : seconds;
-          document.getElementById("countdown").innerHTML = minutes + ":" + seconds;
-          if (distance < 0) {{
-            clearInterval(x);
-            document.getElementById("countdown").innerHTML = "EXPIRED";
-          }}
+        // Passiamo il valore da Python a JS
+        var endTime = {end_timestamp}; 
+
+        var timerInterval = setInterval(function() {{
+            var element = document.getElementById("countdown");
+            
+            // SE IL DIV NON ESISTE ANCORA, NON FARE NULLA E ASPETTA IL PROSSIMO GIRO
+            if (!element) return;
+            
+            var now = new Date().getTime() / 1000;
+            var distance = endTime - now;
+            
+            if (distance < 0) {{
+                element.innerHTML = "EXPIRED";
+                clearInterval(timerInterval);
+                return;
+            }}
+            
+            var minutes = Math.floor(distance / 60);
+            var seconds = Math.floor(distance % 60);
+            
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+            
+            element.innerHTML = minutes + ":" + seconds;
         }}, 1000);
         </script>
         """, unsafe_allow_html=True)
