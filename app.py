@@ -4,10 +4,9 @@ import random
 import time
 
 # --- PAGE CONFIGURATION ---
-st.set_page_config(page_title="Network Exam Simulation", layout="wide")
+st.set_page_config(page_title="Network Exam Simulation 3.0", layout="wide")
 
 # --- CUSTOM CSS FOR BETTER LAYOUT ---
-# This forces the columns to have a distinct look
 st.markdown("""
 <style>
     .stRadio p {font-size: 16px;}
@@ -15,10 +14,16 @@ st.markdown("""
         padding: 15px;
         border-radius: 10px;
     }
+    .question-header {
+        font-weight: bold;
+        color: #31333F;
+        font-size: 1.1em;
+        margin-bottom: 10px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# --- PARSING FUNCTION ---
+# --- PARSING FUNCTION (UPDATED TO CATCH ID) ---
 @st.cache_data
 def load_questions(filename):
     try:
@@ -28,17 +33,28 @@ def load_questions(filename):
         st.error("Error: File 'domande.txt' not found!")
         return []
 
-    raw_questions = re.split(r'Question \d+', content)
+    # We use re.split with capturing group (\d+) to keep the numbers
+    # The result will be: [preamble, "307", "Question body...", "308", "Question body...", ...]
+    parts = re.split(r'Question (\d+)', content)
+    
     parsed_data = []
     
-    for raw in raw_questions:
+    # We step by 2 because parts[i] is the ID and parts[i+1] is the content
+    # Start from 1 because index 0 is usually empty preamble
+    for i in range(1, len(parts), 2):
+        q_id = parts[i].strip()
+        raw = parts[i+1]
+        
         if not raw.strip(): continue
         q_data = {}
+        q_data['id'] = q_id # Store the original ID (e.g., 307)
         
+        # Question Text
         q_match = re.search(r'Question:\s*(.*?)\s*Option A:', raw, re.DOTALL)
         if not q_match: continue
         q_data['text'] = q_match.group(1).strip()
         
+        # Options
         options = {}
         for letter in ['A', 'B', 'C', 'D']:
             pattern = rf'Option {letter}:\s*(.*?)\s*(Option [A-D]:|Correct Answer:)'
@@ -47,9 +63,11 @@ def load_questions(filename):
                 options[letter] = opt_match.group(1).strip()
         q_data['options'] = options
         
+        # Correct Answer
         correct_match = re.search(r'Correct Answer:\s*([A-D])', raw)
         if correct_match: q_data['correct'] = correct_match.group(1).strip()
         
+        # Motivation
         motiv_match = re.search(r'Motivation:\s*(.*)', raw, re.DOTALL)
         q_data['motivation'] = motiv_match.group(1).strip() if motiv_match else "No motivation available."
         
@@ -108,26 +126,24 @@ elif not st.session_state.submitted:
     with st.form("exam_form"):
         st.write("### Answer the questions below:")
         
-        # Temporary dictionary to capture form inputs
         current_answers = {}
         
         for idx, q in enumerate(st.session_state.selected_questions):
-            st.markdown(f"**{idx + 1}.** {q['text']}")
+            # SHOW ID HERE: Question X (ID: YYY)
+            st.markdown(f"**{idx + 1}.** <span style='color:gray; font-size:0.9em'>(ID: {q['id']})</span> &nbsp; {q['text']}", unsafe_allow_html=True)
             
             opts = ["No answer"] + [f"{k}) {v}" for k, v in q['options'].items()]
-            # We use key=f"q_{idx}" to store the state
-            current_answers[idx] = st.radio("Choose:", opts, key=f"q_{idx}", label_visibility="collapsed")
+            current_answers[idx] = st.radio(f"Choose {q['id']}:", opts, key=f"q_{idx}", label_visibility="collapsed")
             st.markdown("---")
         
         submitted_btn = st.form_submit_button("Submit and Grade")
         
         if submitted_btn:
             st.session_state.submitted = True
-            # Save answers to session state so we can access them outside the form
             st.session_state.user_answers = current_answers 
             st.rerun()
 
-# --- 3. RESULTS INTERFACE (SIDE BY SIDE) ---
+# --- 3. RESULTS INTERFACE ---
 else:
     st.header("📊 Exam Results")
     
@@ -136,7 +152,6 @@ else:
     wrong_count = 0
     skipped_count = 0
     
-    # Logic to calculate score first
     for idx, q in enumerate(st.session_state.selected_questions):
         ans = st.session_state.user_answers.get(idx, "No answer")
         correct_opt = q['correct']
@@ -154,7 +169,6 @@ else:
 
     final_score = round(score, 2)
     
-    # Display Score Metrics at the top
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Final Score", f"{final_score} / {len(st.session_state.selected_questions)}")
     m2.metric("Correct", correct_count, delta_color="normal")
@@ -163,31 +177,24 @@ else:
     
     st.divider()
     
-    # --- DETAILED REVIEW LOOP ---
     for idx, q in enumerate(st.session_state.selected_questions):
-        # Create two columns: Left (Question/Options) | Right (Feedback)
         col_left, col_right = st.columns([1, 1], gap="large")
         
         ans = st.session_state.user_answers.get(idx, "No answer")
         correct_opt = q['correct']
         
-        # --- LEFT COLUMN: The Question ---
         with col_left:
-            st.subheader(f"Q{idx+1}")
-            st.info(q['text'])  # Display question text in a box
+            # SHOW ID ALSO IN RESULTS
+            st.subheader(f"Q{idx+1} (ID: {q['id']})")
+            st.info(q['text'])
             
-            # Show options again (Disabled, so user can't change them now)
             opts = ["No answer"] + [f"{k}) {v}" for k, v in q['options'].items()]
-            
-            # Find index of user selection to show it selected
             try:
                 sel_index = opts.index(ans)
             except ValueError:
                 sel_index = 0
-                
-            st.radio("Your Answer:", opts, index=sel_index, disabled=True, key=f"res_radio_{idx}")
+            st.radio(f"Res {idx}", opts, index=sel_index, disabled=True, key=f"res_radio_{idx}", label_visibility="collapsed")
 
-        # --- RIGHT COLUMN: The Correction ---
         with col_right:
             st.write("### Feedback")
             
@@ -202,13 +209,11 @@ else:
                     st.error(f"❌ **Wrong!** (-0.33 pt)")
                     st.write(f"You chose **{letter}**, but the correct answer was **{correct_opt}**.")
 
-            # Motivation Box
             with st.expander("📖 Read Explanation / Motivation", expanded=True):
                 st.markdown(f"_{q['motivation']}_")
         
-        st.divider() # Line separator between questions
+        st.divider()
 
-    # Restart Button
     if st.button("🔄 Restart Exam", type="primary"):
         st.session_state.exam_started = False
         st.session_state.submitted = False
