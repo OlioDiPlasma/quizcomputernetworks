@@ -1,7 +1,6 @@
 import streamlit as st
 import re
 import random
-import time
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="Network Exam Simulation", layout="wide")
@@ -70,30 +69,26 @@ if 'exam_started' not in st.session_state:
     st.session_state.exam_started = False
 if 'selected_questions' not in st.session_state:
     st.session_state.selected_questions = []
-if 'end_time' not in st.session_state:
-    st.session_state.end_time = 0
 if 'submitted' not in st.session_state:
     st.session_state.submitted = False
 if 'user_answers' not in st.session_state:
     st.session_state.user_answers = {}
 
 # --- INTERFACE ---
-st.title("🎓 Computer Network Exam Simulator 3.0")
+st.title("🎓 Computer Networks Exam Simulator ")
 
 questions_db = load_questions("domande.txt")
 
 # --- 1. START MENU ---
 if not st.session_state.exam_started:
     st.write(f"Questions in database: **{len(questions_db)}**")
-    st.info("Rules: +1 correct, -0.33 wrong, 0 skipped. Time limit: 60 min.")
+    st.info("Rules: +1 correct, -0.33 wrong, 0 skipped.")
     
     col1, col2 = st.columns(2)
     def start_exam(n):
         st.session_state.selected_questions = random.sample(questions_db, min(n, len(questions_db)))
         st.session_state.exam_started = True
         st.session_state.submitted = False
-        # Set End Time (Current time + 60 minutes)
-        st.session_state.end_time = time.time() + 3600
         st.rerun()
 
     with col1:
@@ -105,47 +100,6 @@ if not st.session_state.exam_started:
 
 # --- 2. EXAM INTERFACE ---
 elif not st.session_state.submitted:
-    
-    # --- ROBUST LIVE TIMER ---
-    # Calcoliamo il timestamp finale
-    end_timestamp = st.session_state.end_time
-    
-    # Inseriamo il timer nella sidebar con un controllo di sicurezza in JS
-    st.sidebar.markdown(f"""
-        <div style="text-align: center; padding: 10px; background-color: #f0f2f6; border-radius: 10px; margin-bottom: 20px;">
-            <h3 style="margin:0; color: #333;">⏳ Time Remaining</h3>
-            <div id="countdown" style="font-size: 24px; font-weight: bold; color: #ff4b4b;">--:--</div>
-        </div>
-        <script>
-        // Passiamo il valore da Python a JS
-        var endTime = {end_timestamp}; 
-
-        var timerInterval = setInterval(function() {{
-            var element = document.getElementById("countdown");
-            
-            // SE IL DIV NON ESISTE ANCORA, NON FARE NULLA E ASPETTA IL PROSSIMO GIRO
-            if (!element) return;
-            
-            var now = new Date().getTime() / 1000;
-            var distance = endTime - now;
-            
-            if (distance < 0) {{
-                element.innerHTML = "EXPIRED";
-                clearInterval(timerInterval);
-                return;
-            }}
-            
-            var minutes = Math.floor(distance / 60);
-            var seconds = Math.floor(distance % 60);
-            
-            minutes = minutes < 10 ? "0" + minutes : minutes;
-            seconds = seconds < 10 ? "0" + seconds : seconds;
-            
-            element.innerHTML = minutes + ":" + seconds;
-        }}, 1000);
-        </script>
-        """, unsafe_allow_html=True)
-
     with st.form("exam_form"):
         st.write("### Answer the questions below:")
         
