@@ -4,9 +4,9 @@ import random
 import time
 
 # --- PAGE CONFIGURATION ---
-st.set_page_config(page_title="Network Exam Simulation 3.0", layout="wide")
+st.set_page_config(page_title="Network Exam Simulation", layout="wide")
 
-# --- CUSTOM CSS FOR BETTER LAYOUT ---
+# --- CUSTOM CSS ---
 st.markdown("""
 <style>
     .stRadio p {font-size: 16px;}
@@ -23,7 +23,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- PARSING FUNCTION (UPDATED TO CATCH ID) ---
+# --- PARSING FUNCTION ---
 @st.cache_data
 def load_questions(filename):
     try:
@@ -33,28 +33,21 @@ def load_questions(filename):
         st.error("Error: File 'domande.txt' not found!")
         return []
 
-    # We use re.split with capturing group (\d+) to keep the numbers
-    # The result will be: [preamble, "307", "Question body...", "308", "Question body...", ...]
     parts = re.split(r'Question (\d+)', content)
-    
     parsed_data = []
     
-    # We step by 2 because parts[i] is the ID and parts[i+1] is the content
-    # Start from 1 because index 0 is usually empty preamble
     for i in range(1, len(parts), 2):
         q_id = parts[i].strip()
         raw = parts[i+1]
         
         if not raw.strip(): continue
         q_data = {}
-        q_data['id'] = q_id # Store the original ID (e.g., 307)
+        q_data['id'] = q_id
         
-        # Question Text
         q_match = re.search(r'Question:\s*(.*?)\s*Option A:', raw, re.DOTALL)
         if not q_match: continue
         q_data['text'] = q_match.group(1).strip()
         
-        # Options
         options = {}
         for letter in ['A', 'B', 'C', 'D']:
             pattern = rf'Option {letter}:\s*(.*?)\s*(Option [A-D]:|Correct Answer:)'
@@ -63,11 +56,9 @@ def load_questions(filename):
                 options[letter] = opt_match.group(1).strip()
         q_data['options'] = options
         
-        # Correct Answer
         correct_match = re.search(r'Correct Answer:\s*([A-D])', raw)
         if correct_match: q_data['correct'] = correct_match.group(1).strip()
         
-        # Motivation
         motiv_match = re.search(r'Motivation:\s*(.*)', raw, re.DOTALL)
         q_data['motivation'] = motiv_match.group(1).strip() if motiv_match else "No motivation available."
         
@@ -79,15 +70,15 @@ if 'exam_started' not in st.session_state:
     st.session_state.exam_started = False
 if 'selected_questions' not in st.session_state:
     st.session_state.selected_questions = []
-if 'start_time' not in st.session_state:
-    st.session_state.start_time = 0
+if 'end_time' not in st.session_state:
+    st.session_state.end_time = 0
 if 'submitted' not in st.session_state:
     st.session_state.submitted = False
 if 'user_answers' not in st.session_state:
     st.session_state.user_answers = {}
 
 # --- INTERFACE ---
-st.title("🎓 Network Exam Simulator")
+st.title("🎓 Computer Network Exam Simulator 3.0")
 
 questions_db = load_questions("domande.txt")
 
@@ -97,43 +88,59 @@ if not st.session_state.exam_started:
     st.info("Rules: +1 correct, -0.33 wrong, 0 skipped. Time limit: 60 min.")
     
     col1, col2 = st.columns(2)
+    def start_exam(n):
+        st.session_state.selected_questions = random.sample(questions_db, min(n, len(questions_db)))
+        st.session_state.exam_started = True
+        st.session_state.submitted = False
+        # Set End Time (Current time + 60 minutes)
+        st.session_state.end_time = time.time() + 3600
+        st.rerun()
+
     with col1:
         if st.button("🚀 Quick Test (10 questions)"):
-            st.session_state.selected_questions = random.sample(questions_db, min(10, len(questions_db)))
-            st.session_state.exam_started = True
-            st.session_state.submitted = False
-            st.session_state.start_time = time.time()
-            st.rerun()
+            start_exam(10)
     with col2:
         if st.button("📝 Full Exam (33 questions)"):
-            st.session_state.selected_questions = random.sample(questions_db, min(33, len(questions_db)))
-            st.session_state.exam_started = True
-            st.session_state.submitted = False
-            st.session_state.start_time = time.time()
-            st.rerun()
+            start_exam(33)
 
 # --- 2. EXAM INTERFACE ---
 elif not st.session_state.submitted:
-    # Timer
-    elapsed = time.time() - st.session_state.start_time
-    remaining = 3600 - elapsed
-    if remaining > 0:
-        mins, secs = divmod(int(remaining), 60)
-        st.sidebar.metric("⏳ Time Remaining", f"{mins:02d}:{secs:02d}")
-    else:
-        st.sidebar.error("TIME'S UP!")
+    
+    # --- LIVE JAVASCRIPT TIMER ---
+    # We inject a small script that counts down independently of Python
+    end_timestamp = st.session_state.end_time
+    
+    st.sidebar.markdown(f"""
+        <div style="text-align: center; padding: 10px; background-color: #f0f2f6; border-radius: 10px; margin-bottom: 20px;">
+            <h3 style="margin:0; color: #333;">⏳ Time Remaining</h3>
+            <div id="countdown" style="font-size: 24px; font-weight: bold; color: #ff4b4b;">Loading...</div>
+        </div>
+        <script>
+        var countDownDate = {end_timestamp} * 1000;
+        var x = setInterval(function() {{
+          var now = new Date().getTime();
+          var distance = countDownDate - now;
+          var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+          var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+          minutes = minutes < 10 ? "0" + minutes : minutes;
+          seconds = seconds < 10 ? "0" + seconds : seconds;
+          document.getElementById("countdown").innerHTML = minutes + ":" + seconds;
+          if (distance < 0) {{
+            clearInterval(x);
+            document.getElementById("countdown").innerHTML = "EXPIRED";
+          }}
+        }}, 1000);
+        </script>
+        """, unsafe_allow_html=True)
 
     with st.form("exam_form"):
         st.write("### Answer the questions below:")
         
         current_answers = {}
-        
         for idx, q in enumerate(st.session_state.selected_questions):
-            # SHOW ID HERE: Question X (ID: YYY)
             st.markdown(f"**{idx + 1}.** <span style='color:gray; font-size:0.9em'>(ID: {q['id']})</span> &nbsp; {q['text']}", unsafe_allow_html=True)
-            
             opts = ["No answer"] + [f"{k}) {v}" for k, v in q['options'].items()]
-            current_answers[idx] = st.radio(f"Choose {q['id']}:", opts, key=f"q_{idx}", label_visibility="collapsed")
+            current_answers[idx] = st.radio(f"Choice {idx}", opts, key=f"q_{idx}", label_visibility="collapsed")
             st.markdown("---")
         
         submitted_btn = st.form_submit_button("Submit and Grade")
@@ -179,15 +186,12 @@ else:
     
     for idx, q in enumerate(st.session_state.selected_questions):
         col_left, col_right = st.columns([1, 1], gap="large")
-        
         ans = st.session_state.user_answers.get(idx, "No answer")
         correct_opt = q['correct']
         
         with col_left:
-            # SHOW ID ALSO IN RESULTS
             st.subheader(f"Q{idx+1} (ID: {q['id']})")
             st.info(q['text'])
-            
             opts = ["No answer"] + [f"{k}) {v}" for k, v in q['options'].items()]
             try:
                 sel_index = opts.index(ans)
@@ -197,7 +201,6 @@ else:
 
         with col_right:
             st.write("### Feedback")
-            
             if ans == "No answer":
                 st.warning(f"⚪ **Skipped**")
                 st.write(f"Correct Answer: **Option {correct_opt}**")
