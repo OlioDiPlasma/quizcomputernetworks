@@ -158,11 +158,18 @@ if not st.session_state.exam_started:
     
     # --- ACTION BUTTONS ---
     col1, col2 = st.columns(2)
-    
+
     def start_exam(n, pool):
         if len(pool) == 0:
             st.error("No questions available!")
             return
+        
+        # --- FIX IMPORTANTE ---
+        # Se chiedi 33 domande ma la categoria ne ha solo 20, limitiamo n a 20.
+        if n > len(pool):
+            st.toast(f"⚠️ Category has only {len(pool)} questions. Exam reduced to {len(pool)}.")
+            n = len(pool)
+        # ----------------------
         
         # 1. Separa le domande
         unseen_qs = [q for q in pool if q['id'] not in st.session_state.seen_ids]
@@ -172,20 +179,25 @@ if not st.session_state.exam_started:
         
         # 2. Logica di riempimento
         if len(unseen_qs) >= n:
+            # Caso ideale: ci sono abbastanza domande nuove per coprire tutto l'esame
             selection_raw = random.sample(unseen_qs, n)
         else:
+            # Caso misto: prendiamo tutte le nuove disponibili
             selection_raw = unseen_qs[:]
+            
+            # Calcoliamo quante ne mancano per arrivare a n
             needed = n - len(unseen_qs)
+            
             if needed > 0:
+                # Siccome abbiamo fatto il controllo n <= len(pool) all'inizio,
+                # siamo matematicamente sicuri che len(seen_qs) >= needed.
                 selection_raw += random.sample(seen_qs, needed)
-                st.toast(f"⚠️ Only {len(unseen_qs)} new questions remained. Added {needed} older ones.")
+                st.toast(f"⚠️ Only {len(unseen_qs)} new questions available. Added {needed} older ones.")
         
-        # 3. Etichettatura (NUOVO PASSAGGIO)
+        # 3. Etichettatura
         final_selection = []
         for q in selection_raw:
-            # Creiamo una copia per non modificare il database originale
             q_copy = q.copy()
-            # Se l'ID è NELLA memoria PRIMA di aggiornarla, è una domanda vista
             if q['id'] in st.session_state.seen_ids:
                 q_copy['status_tag'] = "OLD"
             else:
@@ -200,7 +212,7 @@ if not st.session_state.exam_started:
         st.session_state.exam_started = True
         st.session_state.submitted = False
         st.rerun()
-
+        
     disable_start = len(selected_pool) == 0
 
     with col1:
