@@ -19,6 +19,13 @@ st.markdown("""
         font-size: 1.1em;
         margin-bottom: 10px;
     }
+    .last-result-box {
+        padding: 15px;
+        background-color: #f0f2f6;
+        border-left: 5px solid #4CAF50;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -41,7 +48,7 @@ def load_questions(filename):
         
         if not raw.strip(): continue
         q_data = {}
-        q_data['id'] = q_id # ID is a string here
+        q_data['id'] = q_id
         
         q_match = re.search(r'Question:\s*(.*?)\s*Option A:', raw, re.DOTALL)
         if not q_match: continue
@@ -71,7 +78,6 @@ def load_categories(filename):
         with open(filename, 'r', encoding='utf-8') as f:
             lines = f.readlines()
     except FileNotFoundError:
-        # Fallback se il file non esiste, per non rompere l'app
         return {}
 
     current_cat = "Uncategorized"
@@ -79,14 +85,11 @@ def load_categories(filename):
     for line in lines:
         line = line.strip()
         if not line: continue
-        
-        # Se la linea finisce con : è una nuova categoria
         if line.endswith(':'):
             current_cat = line[:-1].strip()
             if current_cat not in categories:
                 categories[current_cat] = []
         else:
-            # Cerchiamo tutti i numeri nella riga
             ids = re.findall(r'\d+', line)
             if ids:
                 if current_cat not in categories:
@@ -107,6 +110,12 @@ if 'user_answers' not in st.session_state:
 if 'seen_ids' not in st.session_state:
     st.session_state.seen_ids = set()
 
+# NUOVI STATI PER LA MEMORIA DELL'ULTIMO ESAME
+if 'last_result' not in st.session_state:
+    st.session_state.last_result = None
+if 'current_exam_label' not in st.session_state:
+    st.session_state.current_exam_label = ""
+
 # --- INTERFACE ---
 st.title("🎓 Computer Networks Exam Simulator")
 
@@ -116,6 +125,18 @@ categories_db = load_categories("categorie.txt")
 # --- 1. START MENU ---
 if not st.session_state.exam_started:
     
+    # --- MOSTRA ULTIMO RISULTATO (SE ESISTE) ---
+    if st.session_state.last_result:
+        res = st.session_state.last_result
+        st.markdown(f"""
+        <div class="last-result-box">
+            <h4>🏆 Last Exam Session</h4>
+            <p><b>Score:</b> {res['score']} / {res['total']}</p>
+            <p><b>Context:</b> {res['label']}</p>
+        </div>
+        """, unsafe_allow_html=True)
+    # -------------------------------------------
+
     # --- CONFIGURATION SECTION ---
     st.markdown("### ⚙️ Exam Configuration")
     
@@ -125,6 +146,7 @@ if not st.session_state.exam_started:
         mode = st.radio("Select Mode:", ["Random (All Questions)", "By Category"])
     
     selected_pool = []
+    current_label = "Random Mode" # Default label
     
     with col_config2:
         if mode == "By Category" and categories_db:
@@ -135,10 +157,19 @@ if not st.session_state.exam_started:
                 for cat in selected_cats:
                     allowed_ids.update(categories_db[cat])
                 selected_pool = [q for q in questions_db if q['id'] in allowed_ids]
+                
+                # Creiamo una label leggibile (es. "Category: Network Layer, Exercises")
+                if len(selected_cats) > 2:
+                    cat_str = f"{len(selected_cats)} Categories Selected"
+                else:
+                    cat_str = ", ".join(selected_cats)
+                current_label = f"Category: {cat_str}"
             else:
                 st.warning("Please select at least one category.")
+                current_label = "No Category Selected"
         else:
             selected_pool = questions_db
+            current_label = "Random Mode (All Topics)"
 
     # --- MEMORY STATS ---
     if len(selected_pool) > 0:
@@ -159,18 +190,19 @@ if not st.session_state.exam_started:
     # --- ACTION BUTTONS ---
     col1, col2 = st.columns(2)
 
-    def start_exam(n, pool):
+    # Modificata per accettare label_text
+    def start_exam(n, pool, label_text):
         if len(pool) == 0:
             st.error("No questions available!")
             return
         
-        # --- FIX IMPORTANTE ---
-        # Se chiedi 33 domande ma la categoria ne ha solo 20, limitiamo n a 20.
         if n > len(pool):
             st.toast(f"⚠️ Category has only {len(pool)} questions. Exam reduced to {len(pool)}.")
             n = len(pool)
-        # ----------------------
         
+        # Salviamo l'etichetta dell'esame corrente nello stato
+        st.session_state.current_exam_label = label_text
+
         # 1. Separa le domande
         unseen_qs = [q for q in pool if q['id'] not in st.session_state.seen_ids]
         seen_qs = [q for q in pool if q['id'] in st.session_state.seen_ids]
@@ -179,18 +211,11 @@ if not st.session_state.exam_started:
         
         # 2. Logica di riempimento
         if len(unseen_qs) >= n:
-            # Caso ideale: ci sono abbastanza domande nuove per coprire tutto l'esame
             selection_raw = random.sample(unseen_qs, n)
         else:
-            # Caso misto: prendiamo tutte le nuove disponibili
             selection_raw = unseen_qs[:]
-            
-            # Calcoliamo quante ne mancano per arrivare a n
             needed = n - len(unseen_qs)
-            
             if needed > 0:
-                # Siccome abbiamo fatto il controllo n <= len(pool) all'inizio,
-                # siamo matematicamente sicuri che len(seen_qs) >= needed.
                 selection_raw += random.sample(seen_qs, needed)
                 st.toast(f"⚠️ Only {len(unseen_qs)} new questions available. Added {needed} older ones.")
         
@@ -217,26 +242,25 @@ if not st.session_state.exam_started:
 
     with col1:
         if st.button("🚀 Quick Test (10 questions)", disabled=disable_start, type="primary"):
-            start_exam(10, selected_pool)
+            start_exam(10, selected_pool, current_label)
     with col2:
         if st.button("📝 Full Exam (33 questions)", disabled=disable_start):
-            start_exam(33, selected_pool)
+            start_exam(33, selected_pool, current_label)
 
 # --- 2. EXAM INTERFACE ---
 elif not st.session_state.submitted:
     with st.form("exam_form"):
-        st.write(f"### Exam in progress ({len(st.session_state.selected_questions)} questions)")
+        # Mostra anche qui cosa stiamo facendo
+        st.write(f"### Exam in progress: {st.session_state.current_exam_label}")
         
         current_answers = {}
         for idx, q in enumerate(st.session_state.selected_questions):
             
-            # --- CREAZIONE BADGE ---
             if q.get('status_tag') == "NEW":
                 badge = "<span style='background-color:#d4edda; color:#155724; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold;'>✨ NEW</span>"
             else:
                 badge = "<span style='background-color:#fff3cd; color:#856404; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold;'>♻️ REVISION</span>"
             
-            # Titolo domanda con badge
             st.markdown(f"**{idx + 1}.** {badge} <span style='color:gray; font-size:0.9em'>(ID: {q['id']})</span> &nbsp; {q['text']}", unsafe_allow_html=True)
             
             opts = ["No answer"] + [f"{k}) {v}" for k, v in q['options'].items()]
@@ -291,13 +315,11 @@ else:
         correct_opt = q['correct']
         
         with col_left:
-            # Badge nei risultati
             if q.get('status_tag') == "NEW":
                 badge = "<span style='background-color:#d4edda; color:#155724; padding: 2px 6px; border-radius: 4px; font-size: 0.7em;'>NEW</span>"
             else:
                 badge = "<span style='background-color:#fff3cd; color:#856404; padding: 2px 6px; border-radius: 4px; font-size: 0.7em;'>REV</span>"
 
-            # CORREZIONE QUI: Uso st.markdown invece di st.subheader per renderizzare l'HTML
             st.markdown(f"### Q{idx+1} {badge} <span style='font-size:0.8em; color:gray'>(ID: {q['id']})</span>", unsafe_allow_html=True)
             
             st.info(q['text'])
@@ -327,6 +349,14 @@ else:
         st.divider()
 
     if st.button("🔄 Restart Exam", type="primary"):
+        # --- SALVATAGGIO DATI PRIMA DEL RESET ---
+        st.session_state.last_result = {
+            "score": final_score,
+            "total": max_score,
+            "label": st.session_state.current_exam_label
+        }
+        # ----------------------------------------
+        
         st.session_state.exam_started = False
         st.session_state.submitted = False
         st.session_state.user_answers = {}
