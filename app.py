@@ -276,37 +276,45 @@ elif not st.session_state.submitted:
         st.session_state.submitted = True
         st.rerun()
     
-    # Sidebar Timer (Javascript per animazione fluida)
+    # Sidebar Timer (Javascript)
     with st.sidebar:
         st.write("### ⏳ Time Remaining")
         
-        # Passiamo il timestamp di fine a JS
-        end_timestamp = st.session_state.exam_end_time * 1000 # JS usa millisecondi
+        # Passiamo il timestamp di fine a JS (moltiplicato per 1000 per i millisecondi)
+        end_timestamp = int(st.session_state.exam_end_time * 1000)
         
+        # NOTA: Qui uso le doppie parentesi graffe {{ }} per il codice JS
+        # perché siamo dentro una f-string di Python!
         st.markdown(f"""
         <div id="countdown" class="timer-box">Calculating...</div>
         <script>
         var countDownDate = {end_timestamp};
+        
+        // Aggiorna il conto alla rovescia ogni 1 secondo
         var x = setInterval(function() {{
           var now = new Date().getTime();
           var distance = countDownDate - now;
+          
           var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
           var seconds = Math.floor((distance % (1000 * 60)) / 1000);
           
           if (seconds < 10) {{ seconds = "0" + seconds; }}
           if (minutes < 10) {{ minutes = "0" + minutes; }}
           
-          document.getElementById("countdown").innerHTML = minutes + ":" + seconds;
+          var elem = document.getElementById("countdown");
+          if(elem) {{
+             elem.innerHTML = minutes + ":" + seconds;
+          }}
           
           if (distance < 0) {{
             clearInterval(x);
-            document.getElementById("countdown").innerHTML = "EXPIRED";
+            if(elem) {{ elem.innerHTML = "EXPIRED"; }}
           }}
         }}, 1000);
         </script>
         """, unsafe_allow_html=True)
         
-        st.info("Don't refresh the page, or the layout might reset (but time keeps running).")
+        st.info("Don't refresh the page, or the timer display might reset (but server time keeps running).")
 
     # ------------------
 
