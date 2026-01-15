@@ -2196,7 +2196,7 @@ Option B: Transferring email messages between host and host.
 Option C: The exchange of error messages between TCP protocol and IP protocol.
 Option D: Transferring a web page from a server to a client.
 Correct Answer: A
-Motivation: ICMP is the "diagnostics" companion of IP. It is used by routers and hosts to report errors (e.g., Destination Unreachable, TTL Exceeded) or network conditions (e.g., Echo Request/Reply for Ping) back to the sender.
+Motivation: ICMP is the  "diagnostics" companion of IP. It is used by routers and hosts to report errors (e.g., Destination Unreachable, TTL Exceeded) or network conditions (e.g., Echo Request/Reply for Ping) back to the sender.
 Question 275
 Question: In the TCP header (TCP protocol PCI), the following are obligatorily contained:
 Option A: Some flags used for opening and closing the connection.
