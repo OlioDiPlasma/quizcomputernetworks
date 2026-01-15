@@ -1,6 +1,7 @@
 import streamlit as st
 import re
 import random
+import time
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="Network Exam Simulation", layout="wide")
@@ -25,6 +26,18 @@ st.markdown("""
         border-left: 5px solid #4CAF50;
         border-radius: 5px;
         margin-bottom: 20px;
+    }
+    /* Stile per il timer */
+    .timer-box {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #d9534f;
+        text-align: center;
+        padding: 10px;
+        border: 2px solid #d9534f;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        background-color: #fff5f5;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -110,11 +123,13 @@ if 'user_answers' not in st.session_state:
 if 'seen_ids' not in st.session_state:
     st.session_state.seen_ids = set()
 
-# NUOVI STATI PER LA MEMORIA DELL'ULTIMO ESAME
+# STATI PER MEMORIA E TIMER
 if 'last_result' not in st.session_state:
     st.session_state.last_result = None
 if 'current_exam_label' not in st.session_state:
     st.session_state.current_exam_label = ""
+if 'exam_end_time' not in st.session_state:
+    st.session_state.exam_end_time = 0
 
 # --- INTERFACE ---
 st.title("🎓 Computer Networks Exam Simulator")
@@ -125,7 +140,7 @@ categories_db = load_categories("categorie.txt")
 # --- 1. START MENU ---
 if not st.session_state.exam_started:
     
-    # --- MOSTRA ULTIMO RISULTATO (SE ESISTE) ---
+    # --- MOSTRA ULTIMO RISULTATO ---
     if st.session_state.last_result:
         res = st.session_state.last_result
         st.markdown(f"""
@@ -135,7 +150,6 @@ if not st.session_state.exam_started:
             <p><b>Context:</b> {res['label']}</p>
         </div>
         """, unsafe_allow_html=True)
-    # -------------------------------------------
 
     # --- CONFIGURATION SECTION ---
     st.markdown("### ⚙️ Exam Configuration")
@@ -146,7 +160,7 @@ if not st.session_state.exam_started:
         mode = st.radio("Select Mode:", ["Random (All Questions)", "By Category"])
     
     selected_pool = []
-    current_label = "Random Mode" # Default label
+    current_label = "Random Mode"
     
     with col_config2:
         if mode == "By Category" and categories_db:
@@ -158,7 +172,6 @@ if not st.session_state.exam_started:
                     allowed_ids.update(categories_db[cat])
                 selected_pool = [q for q in questions_db if q['id'] in allowed_ids]
                 
-                # Creiamo una label leggibile (es. "Category: Network Layer, Exercises")
                 if len(selected_cats) > 2:
                     cat_str = f"{len(selected_cats)} Categories Selected"
                 else:
@@ -185,12 +198,11 @@ if not st.session_state.exam_started:
                 st.rerun()
 
     st.divider()
-    st.write("Rules: +1 correct, -0.33 wrong, 0 skipped.")
+    st.write("Rules: +1 correct, -0.33 wrong, 0 skipped. Time: 1.8 mins per question.")
     
     # --- ACTION BUTTONS ---
     col1, col2 = st.columns(2)
 
-    # Modificata per accettare label_text
     def start_exam(n, pool, label_text):
         if len(pool) == 0:
             st.error("No questions available!")
@@ -200,8 +212,13 @@ if not st.session_state.exam_started:
             st.toast(f"⚠️ Category has only {len(pool)} questions. Exam reduced to {len(pool)}.")
             n = len(pool)
         
-        # Salviamo l'etichetta dell'esame corrente nello stato
         st.session_state.current_exam_label = label_text
+
+        # --- SETUP TIMER ---
+        # 1.8 minuti per domanda * 60 secondi
+        duration_seconds = n * 1.8 * 60
+        st.session_state.exam_end_time = time.time() + duration_seconds
+        # -------------------
 
         # 1. Separa le domande
         unseen_qs = [q for q in pool if q['id'] not in st.session_state.seen_ids]
@@ -249,8 +266,51 @@ if not st.session_state.exam_started:
 
 # --- 2. EXAM INTERFACE ---
 elif not st.session_state.submitted:
+    
+    # --- LOGICA TIMER ---
+    remaining_time = st.session_state.exam_end_time - time.time()
+    
+    # Se il tempo è scaduto
+    if remaining_time <= 0:
+        st.error("⏰ TIME'S UP! Submitting your answers automatically...")
+        st.session_state.submitted = True
+        st.rerun()
+    
+    # Sidebar Timer (Javascript per animazione fluida)
+    with st.sidebar:
+        st.write("### ⏳ Time Remaining")
+        
+        # Passiamo il timestamp di fine a JS
+        end_timestamp = st.session_state.exam_end_time * 1000 # JS usa millisecondi
+        
+        st.markdown(f"""
+        <div id="countdown" class="timer-box">Calculating...</div>
+        <script>
+        var countDownDate = {end_timestamp};
+        var x = setInterval(function() {{
+          var now = new Date().getTime();
+          var distance = countDownDate - now;
+          var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+          var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+          
+          if (seconds < 10) {{ seconds = "0" + seconds; }}
+          if (minutes < 10) {{ minutes = "0" + minutes; }}
+          
+          document.getElementById("countdown").innerHTML = minutes + ":" + seconds;
+          
+          if (distance < 0) {{
+            clearInterval(x);
+            document.getElementById("countdown").innerHTML = "EXPIRED";
+          }}
+        }}, 1000);
+        </script>
+        """, unsafe_allow_html=True)
+        
+        st.info("Don't refresh the page, or the layout might reset (but time keeps running).")
+
+    # ------------------
+
     with st.form("exam_form"):
-        # Mostra anche qui cosa stiamo facendo
         st.write(f"### Exam in progress: {st.session_state.current_exam_label}")
         
         current_answers = {}
@@ -270,8 +330,13 @@ elif not st.session_state.submitted:
         submitted_btn = st.form_submit_button("Submit and Grade")
         
         if submitted_btn:
-            st.session_state.submitted = True
-            st.session_state.user_answers = current_answers 
+            # Controllo finale server-side per vedere se hai barato col tempo
+            if time.time() > st.session_state.exam_end_time:
+                st.error("Submission rejected: Time limit exceeded!")
+                st.session_state.submitted = True
+            else:
+                st.session_state.submitted = True
+                st.session_state.user_answers = current_answers 
             st.rerun()
 
 # --- 3. RESULTS INTERFACE ---
@@ -349,13 +414,11 @@ else:
         st.divider()
 
     if st.button("🔄 Restart Exam", type="primary"):
-        # --- SALVATAGGIO DATI PRIMA DEL RESET ---
         st.session_state.last_result = {
             "score": final_score,
             "total": max_score,
             "label": st.session_state.current_exam_label
         }
-        # ----------------------------------------
         
         st.session_state.exam_started = False
         st.session_state.submitted = False
