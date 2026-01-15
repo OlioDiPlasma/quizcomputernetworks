@@ -22,14 +22,14 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- PARSING FUNCTION ---
+# --- PARSING FUNCTIONS ---
 @st.cache_data
 def load_questions(filename):
     try:
         with open(filename, 'r', encoding='utf-8') as f:
             content = f.read()
     except FileNotFoundError:
-        st.error("Error: File 'domande.txt' not found!")
+        st.error(f"Error: File '{filename}' not found!")
         return []
 
     parts = re.split(r'Question (\d+)', content)
@@ -41,7 +41,7 @@ def load_questions(filename):
         
         if not raw.strip(): continue
         q_data = {}
-        q_data['id'] = q_id
+        q_data['id'] = q_id # ID is a string here
         
         q_match = re.search(r'Question:\s*(.*?)\s*Option A:', raw, re.DOTALL)
         if not q_match: continue
@@ -64,6 +64,37 @@ def load_questions(filename):
         parsed_data.append(q_data)
     return parsed_data
 
+@st.cache_data
+def load_categories(filename):
+    categories = {}
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+    except FileNotFoundError:
+        # Fallback se il file non esiste, per non rompere l'app
+        return {}
+
+    current_cat = "Uncategorized"
+    
+    for line in lines:
+        line = line.strip()
+        if not line: continue
+        
+        # Se la linea finisce con : è una nuova categoria
+        if line.endswith(':'):
+            current_cat = line[:-1].strip()
+            if current_cat not in categories:
+                categories[current_cat] = []
+        else:
+            # Cerchiamo tutti i numeri nella riga
+            ids = re.findall(r'\d+', line)
+            if ids:
+                if current_cat not in categories:
+                    categories[current_cat] = []
+                categories[current_cat].extend(ids)
+                
+    return categories
+
 # --- APP STATE ---
 if 'exam_started' not in st.session_state:
     st.session_state.exam_started = False
@@ -75,33 +106,76 @@ if 'user_answers' not in st.session_state:
     st.session_state.user_answers = {}
 
 # --- INTERFACE ---
-st.title("🎓 Computer Networks Exam Simulator ")
+st.title("🎓 Computer Networks Exam Simulator")
 
 questions_db = load_questions("domande.txt")
+categories_db = load_categories("categorie.txt")
 
 # --- 1. START MENU ---
 if not st.session_state.exam_started:
-    st.write(f"Questions in database: **{len(questions_db)}**")
-    st.info("Rules: +1 correct, -0.33 wrong, 0 skipped.")
     
+    # --- CONFIGURATION SECTION ---
+    st.markdown("### ⚙️ Exam Configuration")
+    
+    col_config1, col_config2 = st.columns([1, 2])
+    
+    with col_config1:
+        mode = st.radio("Select Mode:", ["Random (All Questions)", "By Category"])
+    
+    selected_pool = []
+    
+    with col_config2:
+        if mode == "By Category" and categories_db:
+            selected_cats = st.multiselect("Select Categories:", list(categories_db.keys()))
+            
+            if selected_cats:
+                # Raccogli tutti gli ID dalle categorie selezionate
+                allowed_ids = set()
+                for cat in selected_cats:
+                    allowed_ids.update(categories_db[cat])
+                
+                # Filtra il database delle domande
+                # Nota: q['id'] è stringa nel db, assicuriamoci di confrontare stringhe
+                selected_pool = [q for q in questions_db if q['id'] in allowed_ids]
+                st.info(f"Questions available in selected categories: **{len(selected_pool)}**")
+            else:
+                st.warning("Please select at least one category.")
+        else:
+            selected_pool = questions_db
+            st.info(f"Total questions in database: **{len(questions_db)}**")
+
+    st.divider()
+    
+    st.write("Rules: +1 correct, -0.33 wrong, 0 skipped.")
+    
+    # --- ACTION BUTTONS ---
     col1, col2 = st.columns(2)
-    def start_exam(n):
-        st.session_state.selected_questions = random.sample(questions_db, min(n, len(questions_db)))
+    
+    def start_exam(n, pool):
+        if len(pool) == 0:
+            st.error("No questions available for selection!")
+            return
+        
+        # Se chiediamo più domande di quelle disponibili, prendile tutte
+        sample_size = min(n, len(pool))
+        st.session_state.selected_questions = random.sample(pool, sample_size)
         st.session_state.exam_started = True
         st.session_state.submitted = False
         st.rerun()
 
+    disable_start = len(selected_pool) == 0
+
     with col1:
-        if st.button("🚀 Quick Test (10 questions)"):
-            start_exam(10)
+        if st.button("🚀 Quick Test (10 questions)", disabled=disable_start, type="primary"):
+            start_exam(10, selected_pool)
     with col2:
-        if st.button("📝 Full Exam (33 questions)"):
-            start_exam(33)
+        if st.button("📝 Full Exam (33 questions)", disabled=disable_start):
+            start_exam(33, selected_pool)
 
 # --- 2. EXAM INTERFACE ---
 elif not st.session_state.submitted:
     with st.form("exam_form"):
-        st.write("### Answer the questions below:")
+        st.write(f"### Exam in progress ({len(st.session_state.selected_questions)} questions)")
         
         current_answers = {}
         for idx, q in enumerate(st.session_state.selected_questions):
@@ -142,9 +216,10 @@ else:
                 wrong_count += 1
 
     final_score = round(score, 2)
+    max_score = len(st.session_state.selected_questions)
     
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Final Score", f"{final_score} / {len(st.session_state.selected_questions)}")
+    m1.metric("Final Score", f"{final_score} / {max_score}")
     m2.metric("Correct", correct_count, delta_color="normal")
     m3.metric("Wrong", wrong_count, delta_color="inverse")
     m4.metric("Skipped", skipped_count, delta_color="off")
@@ -188,4 +263,5 @@ else:
         st.session_state.exam_started = False
         st.session_state.submitted = False
         st.session_state.user_answers = {}
+        st.session_state.selected_questions = []
         st.rerun()
