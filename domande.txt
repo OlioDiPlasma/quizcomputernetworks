@@ -270,7 +270,7 @@ Question 38
 Question: The difference between teleservices, bearer services, and supplementary services lies in the fact that:
 Option A: Bearer services offer only information transfer between user-network interfaces; teleservices involve user equipment functions according to established protocols; supplementary services modify or integrate a bearer service and a teleservice.
 Option B: Teleservices offer only transfer; bearer services involve user equipment; supplementary services are special data transfer services.
-Option C: [Incorrect variation of A].
+Option C: While bearer services offer only information transfer between user-network interfaces, teleservices involve the functions of user equipment according to pre-established protocols; supplementary services are special services for data transfer.
 Correct Answer: A
 Motivation: This follows ISDN terminology. Bearer services provide the basic capability to transmit signals (Layer 1-3). Teleservices (like telephony or fax) provide full end-to-end capability including terminal equipment functions (Layers 1-7). Supplementary services (like Call Waiting) cannot stand alone; they augment bearer or teleservices.
 Question 39
@@ -716,7 +716,7 @@ Motivation: The Congestion Window ($cwnd$) is dynamic.
 The actual transmission window is $\min(cwnd, rwnd)$, but the increment logic of the congestion component depends on both phases.
 Question 95
 Question: CSMA and CSMA-CD protocols admit 1-persistent and non-persistent versions:
-Option A: [Incorrect definitions].
+Option A: In the case of the 1-persistent version, if sensing the channel indicates it is busy, the station continues to listen and starts transmitting as soon as the current transmission ends. In the case of non-persistent versions, if sensing the channel indicates it is busy, the transmission attempt is rescheduled after a random delay.
 Option B: In the non-persistent version, if the channel is busy, the attempt is postponed by a random delay; in the 1-persistent version, if busy, transmission begins as soon as the channel becomes free.
 Option C: In both cases, random delay is used.
 Correct Answer: B
@@ -1106,9 +1106,9 @@ Correct Answer: B
 Motivation: Error detection (CRC) is typically done at the MAC sublayer (in the 802.3 frame trailer) or by the HDLC/PPP framing. The LLC sublayer (802.2), which sits inside the MAC data field, assumes the underlying MAC has already checked for errors. Therefore, the LLC header itself does not usually include a CRC for the data.
 Question 145
 Question: Which of the following statements is true regarding topology performance?
-Option A: A topology T1 allows less traffic than T2 only with uniform traffic.
-Option B: T1 always allows less traffic than T2.
-Option C: The quantity of traffic handled in a topology T1 compared to T2 depends on the distribution of traffic among nodes.
+Option A: A topology $T_1$, with $N$ nodes, $C$ channels, and average distance $M_1$, is always able to handle less traffic than a topology $T_2$, with $N$ nodes, $C$ channels, and average distance $M_2 > M_1$, only when traffic is uniformly distributed among nodes.
+Option B: A topology $T_1$, with $N$ nodes, $C$ channels, and average distance $M_1$, is always able to handle less traffic than a topology $T_2$, with $N$ nodes, $C$ channels, and average distance $M_2 > M_1$, regardless of the traffic distribution.
+Option C: The amount of traffic handled in a topology $T_1$, with $N$ nodes, $C$ channels, and average distance $M_1$, compared to that handled in a topology $T_2$, with $N$ nodes, $C$ channels, and average distance $M_2 > M_1$, depends on the traffic distribution among the nodes.
 Correct Answer: C
 Motivation: You cannot declare one topology strictly "better" than another without knowing the traffic pattern. For example, a Ring topology might be efficient for neighbor-to-neighbor traffic but poor for cross-network traffic compared to a Star. A specialized traffic matrix can favor one topology over another despite average distance metrics.
 Question 146
@@ -1150,7 +1150,7 @@ Option A: Is brought to a value equal to half the threshold.
 Option B: Is brought to a value equal to the threshold value.
 Option C: Is returned to the initial value.
 Correct Answer: A
-Motivation: (Clarification of Source Ambiguity): Standard TCP Reno "Fast Recovery" sets the threshold ($ssthresh$) to half the current flight size (approx $cwnd/2$), and then sets the new $cwnd$ to $ssthresh + 3$ (for the 3 dup ACKs). The source quiz has ambiguous options ("Half the threshold" vs "Equal to threshold"). Given the verification indicates A, we interpret "Half the threshold" as a poorly phrased reference to the "Halving process" involving the threshold. However, technically, the window becomes approx half the original window (which is equal to the new threshold). Option B ("Equal to the threshold") describes the result more accurately ($NewCwnd \approx NewThreshold$). Due to the PDF verifying A, we retain A but note the mechanism: **The window is drastically reduced (halved) to
+Motivation: Congestion avoidance, half of cwnd 
 Question 151
 Question: What is the order of magnitude of the maximum transmission speed on a twisted pair cable?
 Option A: 1 Tbit/s
@@ -1555,11 +1555,10 @@ Correct Answer: B
 Motivation: IP's hierarchical addressing (Network/Host) and CIDR allow for Route Aggregation. Routers in the core of the Internet don't need to know every single subnet; they route based on large aggregated blocks. This scalability is the key reason IP can support a global network of billions of devices.
 Question 200
 Question: A routing protocol:
-Option A: Prevents exchange of information on network state to build routing tables.
+Option A: Provides exchange of information on network state to build routing tables.
 Option B: Defines operations to forward single packets.
 Option C: Defines operations to choose the path towards the destination.
 Option D: Uses routing tables only for circuit switching.
-Correct Answer: A (Correction: The text says A, but the definition describes A. Wait. The text says "prevede lo scambio" (foresees the exchange). English translation: "Provides for the exchange...").
 Correct Answer: A
 Motivation: Routing protocols (like OSPF, RIP, BGP) are the control-plane mechanisms. They involve routers exchanging information (Link States, Distance Vectors) to dynamically build and maintain the Routing Table (RIB). This table is then used to compute the best paths.
 Question 201
@@ -2257,7 +2256,6 @@ Question: Which field in the IP header is used to prevent a packet from being fo
 Option A: Destination Address.
 Option B: Version.
 Option C: None of the answers.
-Correct Answer: C (Wait, standard answer is TTL. The option C says "None". Let's check if "Time To Live" was an option. In the source text provided in the prompt history for Q281, options are A, B, C "Nessuna delle risposte". The comment says "il campo usato è il TTL". So TTL is the correct mechanism, but if it wasn't listed in A or B, then C is the correct choice for the quiz.)
 Correct Answer: C
 Motivation: The mechanism is the TTL (Time To Live) field. Since this specific field was not listed in the explicit options A or B (which were Destination Address and Version), the correct choice among the provided options is "None of the above".
 Question 282
@@ -2389,14 +2387,7 @@ Option B: 1, 2, 3
 Option C: 0, 1
 Option D: 0, 1, 2, 3
 Correct Answer: B
-Motivation:
-                                          * Sent: 0, 1, 2, 3.
-                                          * Received: 0 (Buffered/Delivered), 1 (Lost), 2 (Buffered), 3 (Buffered).
-                                          * ACK Logic: In Cumulative ACK (looking for next expected in sequence), the receiver accepts 0, but gets stuck at 1. It typically sends ACK 1 (expecting 1) repeatedly for packets 2 and 3.
-                                          * Timeout: The sender times out for packet 1.
-                                          * Go-Back-N vs SR: The question says "Selective Repeat" but option B ("1, 2, 3") implies the sender retransmitted everything from 1 onwards (Go-Back-N behavior) OR the specific implementation falls back. However, standard SR should only retransmit 1.
-                                          * Re-evaluating based on "Cumulative ACK semantics" in SR context: Pure SR usually uses Selective ACKs. If it uses Cumulative ACKs only (like TCP without SACK), it behaves like Go-Back-N. If the quiz implies a hybrid or specific behavior where the sender sees "ACK 1" and the timeout expires, and it retransmits the whole unacked window?
-                                          * Source Key Check: The source verifies B (1, 2, 3). This strongly suggests the protocol is behaving like Go-Back-N (retransmitting the whole window 1, 2, 3 upon timeout of 1) OR the question implies the specific variant discussed in the course behaves this way (e.g., simplistic SR implementation that re-sends the window). Technically, pure SR would just send 1. But given the correct answer B, the motivation is: The sender times out on Packet 1 and retransmits the outstanding window (1, 2, 3).
+Motivation: This exercises confuses GBN with SR most likely A correct answer
 Question 300
 Question: What is the speed of WiFi technology nowadays?
 Option A: Hundreds of Gigabit/s
