@@ -94,7 +94,6 @@ def load_categories(filename):
                 categories[current_cat].extend(ids)
                 
     return categories
-
 # --- APP STATE ---
 if 'exam_started' not in st.session_state:
     st.session_state.exam_started = False
@@ -104,6 +103,10 @@ if 'submitted' not in st.session_state:
     st.session_state.submitted = False
 if 'user_answers' not in st.session_state:
     st.session_state.user_answers = {}
+
+# NUOVO: Set per tenere traccia degli ID già visti in questa sessione
+if 'seen_ids' not in st.session_state:
+    st.session_state.seen_ids = set()
 
 # --- INTERFACE ---
 st.title("🎓 Computer Networks Exam Simulator")
@@ -129,23 +132,31 @@ if not st.session_state.exam_started:
             selected_cats = st.multiselect("Select Categories:", list(categories_db.keys()))
             
             if selected_cats:
-                # Raccogli tutti gli ID dalle categorie selezionate
                 allowed_ids = set()
                 for cat in selected_cats:
                     allowed_ids.update(categories_db[cat])
-                
-                # Filtra il database delle domande
-                # Nota: q['id'] è stringa nel db, assicuriamoci di confrontare stringhe
                 selected_pool = [q for q in questions_db if q['id'] in allowed_ids]
-                st.info(f"Questions available in selected categories: **{len(selected_pool)}**")
             else:
                 st.warning("Please select at least one category.")
         else:
             selected_pool = questions_db
-            st.info(f"Total questions in database: **{len(questions_db)}**")
+
+    # --- MEMORY STATS ---
+    # Calcoliamo quante domande del pool selezionato sono già state viste
+    if len(selected_pool) > 0:
+        pool_ids = set(q['id'] for q in selected_pool)
+        seen_in_pool = len(pool_ids.intersection(st.session_state.seen_ids))
+        remaining = len(selected_pool) - seen_in_pool
+        
+        st.caption(f"📊 Stats for selection: Total **{len(selected_pool)}** | Seen: **{seen_in_pool}** | Unseen: **{remaining}**")
+        
+        # Bottone per resettare la memoria se vuoi ricominciare da zero
+        if seen_in_pool > 0:
+            if st.button("🧹 Reset Memory (Forget seen questions)"):
+                st.session_state.seen_ids = set()
+                st.rerun()
 
     st.divider()
-    
     st.write("Rules: +1 correct, -0.33 wrong, 0 skipped.")
     
     # --- ACTION BUTTONS ---
@@ -153,12 +164,33 @@ if not st.session_state.exam_started:
     
     def start_exam(n, pool):
         if len(pool) == 0:
-            st.error("No questions available for selection!")
+            st.error("No questions available!")
             return
         
-        # Se chiediamo più domande di quelle disponibili, prendile tutte
-        sample_size = min(n, len(pool))
-        st.session_state.selected_questions = random.sample(pool, sample_size)
+        # LOGICA INTELLIGENTE
+        # 1. Separa le domande del pool in "mai viste" e "già viste"
+        unseen_qs = [q for q in pool if q['id'] not in st.session_state.seen_ids]
+        seen_qs = [q for q in pool if q['id'] in st.session_state.seen_ids]
+        
+        final_selection = []
+        
+        # 2. Cerca di riempire n con le domande mai viste
+        if len(unseen_qs) >= n:
+            final_selection = random.sample(unseen_qs, n)
+        else:
+            # Se non bastano, prendile tutte le "unseen" e riempi il resto con le "seen"
+            final_selection = unseen_qs[:] # Prendi tutte le nuove
+            needed = n - len(unseen_qs)
+            if needed > 0:
+                # Pesca il resto dalle vecchie
+                final_selection += random.sample(seen_qs, needed)
+                st.toast(f"⚠️ Only {len(unseen_qs)} new questions remained. Added {needed} older ones.")
+        
+        # 3. Aggiorna la memoria con le domande appena selezionate
+        for q in final_selection:
+            st.session_state.seen_ids.add(q['id'])
+
+        st.session_state.selected_questions = final_selection
         st.session_state.exam_started = True
         st.session_state.submitted = False
         st.rerun()
