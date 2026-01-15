@@ -279,13 +279,15 @@ else:
         correct_opt = q['correct']
         
         with col_left:
-            # Badge anche nei risultati
+            # Badge nei risultati
             if q.get('status_tag') == "NEW":
                 badge = "<span style='background-color:#d4edda; color:#155724; padding: 2px 6px; border-radius: 4px; font-size: 0.7em;'>NEW</span>"
             else:
                 badge = "<span style='background-color:#fff3cd; color:#856404; padding: 2px 6px; border-radius: 4px; font-size: 0.7em;'>REV</span>"
 
-            st.subheader(f"Q{idx+1} {badge} (ID: {q['id']})")
+            # CORREZIONE QUI: Uso st.markdown invece di st.subheader per renderizzare l'HTML
+            st.markdown(f"### Q{idx+1} {badge} <span style='font-size:0.8em; color:gray'>(ID: {q['id']})</span>", unsafe_allow_html=True)
+            
             st.info(q['text'])
             opts = ["No answer"] + [f"{k}) {v}" for k, v in q['options'].items()]
             try:
