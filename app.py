@@ -94,6 +94,7 @@ def load_categories(filename):
                 categories[current_cat].extend(ids)
                 
     return categories
+
 # --- APP STATE ---
 if 'exam_started' not in st.session_state:
     st.session_state.exam_started = False
@@ -103,8 +104,6 @@ if 'submitted' not in st.session_state:
     st.session_state.submitted = False
 if 'user_answers' not in st.session_state:
     st.session_state.user_answers = {}
-
-# NUOVO: Set per tenere traccia degli ID già visti in questa sessione
 if 'seen_ids' not in st.session_state:
     st.session_state.seen_ids = set()
 
@@ -142,7 +141,6 @@ if not st.session_state.exam_started:
             selected_pool = questions_db
 
     # --- MEMORY STATS ---
-    # Calcoliamo quante domande del pool selezionato sono già state viste
     if len(selected_pool) > 0:
         pool_ids = set(q['id'] for q in selected_pool)
         seen_in_pool = len(pool_ids.intersection(st.session_state.seen_ids))
@@ -150,7 +148,6 @@ if not st.session_state.exam_started:
         
         st.caption(f"📊 Stats for selection: Total **{len(selected_pool)}** | Seen: **{seen_in_pool}** | Unseen: **{remaining}**")
         
-        # Bottone per resettare la memoria se vuoi ricominciare da zero
         if seen_in_pool > 0:
             if st.button("🧹 Reset Memory (Forget seen questions)"):
                 st.session_state.seen_ids = set()
@@ -167,26 +164,35 @@ if not st.session_state.exam_started:
             st.error("No questions available!")
             return
         
-        # LOGICA INTELLIGENTE
-        # 1. Separa le domande del pool in "mai viste" e "già viste"
+        # 1. Separa le domande
         unseen_qs = [q for q in pool if q['id'] not in st.session_state.seen_ids]
         seen_qs = [q for q in pool if q['id'] in st.session_state.seen_ids]
         
-        final_selection = []
+        selection_raw = []
         
-        # 2. Cerca di riempire n con le domande mai viste
+        # 2. Logica di riempimento
         if len(unseen_qs) >= n:
-            final_selection = random.sample(unseen_qs, n)
+            selection_raw = random.sample(unseen_qs, n)
         else:
-            # Se non bastano, prendile tutte le "unseen" e riempi il resto con le "seen"
-            final_selection = unseen_qs[:] # Prendi tutte le nuove
+            selection_raw = unseen_qs[:]
             needed = n - len(unseen_qs)
             if needed > 0:
-                # Pesca il resto dalle vecchie
-                final_selection += random.sample(seen_qs, needed)
+                selection_raw += random.sample(seen_qs, needed)
                 st.toast(f"⚠️ Only {len(unseen_qs)} new questions remained. Added {needed} older ones.")
         
-        # 3. Aggiorna la memoria con le domande appena selezionate
+        # 3. Etichettatura (NUOVO PASSAGGIO)
+        final_selection = []
+        for q in selection_raw:
+            # Creiamo una copia per non modificare il database originale
+            q_copy = q.copy()
+            # Se l'ID è NELLA memoria PRIMA di aggiornarla, è una domanda vista
+            if q['id'] in st.session_state.seen_ids:
+                q_copy['status_tag'] = "OLD"
+            else:
+                q_copy['status_tag'] = "NEW"
+            final_selection.append(q_copy)
+
+        # 4. Aggiorna la memoria globale
         for q in final_selection:
             st.session_state.seen_ids.add(q['id'])
 
@@ -211,7 +217,16 @@ elif not st.session_state.submitted:
         
         current_answers = {}
         for idx, q in enumerate(st.session_state.selected_questions):
-            st.markdown(f"**{idx + 1}.** <span style='color:gray; font-size:0.9em'>(ID: {q['id']})</span> &nbsp; {q['text']}", unsafe_allow_html=True)
+            
+            # --- CREAZIONE BADGE ---
+            if q.get('status_tag') == "NEW":
+                badge = "<span style='background-color:#d4edda; color:#155724; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold;'>✨ NEW</span>"
+            else:
+                badge = "<span style='background-color:#fff3cd; color:#856404; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold;'>♻️ REVISION</span>"
+            
+            # Titolo domanda con badge
+            st.markdown(f"**{idx + 1}.** {badge} <span style='color:gray; font-size:0.9em'>(ID: {q['id']})</span> &nbsp; {q['text']}", unsafe_allow_html=True)
+            
             opts = ["No answer"] + [f"{k}) {v}" for k, v in q['options'].items()]
             current_answers[idx] = st.radio(f"Choice {idx}", opts, key=f"q_{idx}", label_visibility="collapsed")
             st.markdown("---")
@@ -264,7 +279,13 @@ else:
         correct_opt = q['correct']
         
         with col_left:
-            st.subheader(f"Q{idx+1} (ID: {q['id']})")
+            # Badge anche nei risultati
+            if q.get('status_tag') == "NEW":
+                badge = "<span style='background-color:#d4edda; color:#155724; padding: 2px 6px; border-radius: 4px; font-size: 0.7em;'>NEW</span>"
+            else:
+                badge = "<span style='background-color:#fff3cd; color:#856404; padding: 2px 6px; border-radius: 4px; font-size: 0.7em;'>REV</span>"
+
+            st.subheader(f"Q{idx+1} {badge} (ID: {q['id']})")
             st.info(q['text'])
             opts = ["No answer"] + [f"{k}) {v}" for k, v in q['options'].items()]
             try:
