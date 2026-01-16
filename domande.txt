@@ -1157,7 +1157,6 @@ Option A: 1 Tbit/s
 Option B: 1 kbit/s
 Option C: 1 Mbit/s
 Option D: 1 Gbit/s
-Option E: 1 bit/s
 Correct Answer: D
 Motivation: Modern twisted pair standards (like Cat5e, Cat6, Cat6a) support speeds of 1 Gbit/s (1000BASE-T) and up to 10 Gbit/s (10GBASE-T) over short distances. Even higher speeds (40 Gbps) are possible over very short runs (Cat8), making the "Gigabit" order the correct current benchmark.
 Question 152
