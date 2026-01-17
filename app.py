@@ -137,18 +137,20 @@ if not st.session_state.exam_started:
         """, unsafe_allow_html=True)
     # -------------------------------------------
 
-    # --- CONFIGURATION SECTION ---
+# --- CONFIGURATION SECTION ---
     st.markdown("### ⚙️ Exam Configuration")
     
     col_config1, col_config2 = st.columns([1, 2])
     
     with col_config1:
-        mode = st.radio("Select Mode:", ["Random (All Questions)", "By Category"])
+        # 1. Aggiunta l'opzione "Sequential" al Radio Button
+        mode = st.radio("Select Mode:", ["Random (All Questions)", "By Category", "Sequential (Chunks of 33)"])
     
     selected_pool = []
-    current_label = "Random Mode" # Default label
+    current_label = "Random Mode" 
     
     with col_config2:
+        # --- LOGICA PER CATEGORIE ---
         if mode == "By Category" and categories_db:
             selected_cats = st.multiselect("Select Categories:", list(categories_db.keys()))
             
@@ -158,7 +160,6 @@ if not st.session_state.exam_started:
                     allowed_ids.update(categories_db[cat])
                 selected_pool = [q for q in questions_db if q['id'] in allowed_ids]
                 
-                # Creiamo una label leggibile (es. "Category: Network Layer, Exercises")
                 if len(selected_cats) > 2:
                     cat_str = f"{len(selected_cats)} Categories Selected"
                 else:
@@ -167,6 +168,34 @@ if not st.session_state.exam_started:
             else:
                 st.warning("Please select at least one category.")
                 current_label = "No Category Selected"
+
+        # --- NUOVA LOGICA: SEQUENTIAL (CHUNKS) ---
+        elif mode == "Sequential (Chunks of 33)":
+            chunk_size = 33
+            total_qs = len(questions_db)
+            # Calcolo quanti blocchi servono
+            num_chunks = (total_qs + chunk_size - 1) // chunk_size 
+            
+            chunk_options = []
+            for i in range(num_chunks):
+                start_num = i * chunk_size + 1
+                end_num = min((i + 1) * chunk_size, total_qs)
+                chunk_options.append(f"Part {i+1} (Questions {start_num}-{end_num})")
+            
+            selected_chunk_label = st.selectbox("Select Exam Part:", chunk_options)
+            
+            # Recupero l'indice selezionato (0 per Part 1, 1 per Part 2, ecc.)
+            chunk_idx = chunk_options.index(selected_chunk_label)
+            
+            # Slicing della lista domande
+            start_idx = chunk_idx * chunk_size
+            end_idx = start_idx + chunk_size
+            
+            # Python gestisce l'end_idx > lunghezza lista automaticamente
+            selected_pool = questions_db[start_idx:end_idx]
+            current_label = f"Sequential: {selected_chunk_label}"
+
+        # --- LOGICA RANDOM CLASSICA ---
         else:
             selected_pool = questions_db
             current_label = "Random Mode (All Topics)"
