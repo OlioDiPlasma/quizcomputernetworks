@@ -1,0 +1,539 @@
+Question 1
+Question: What is the primary function of the OSPF (Open Shortest Path First) protocol?
+Option A: To resolve domain names into IP addresses.
+Option B: To calculate the shortest path within an Autonomous System using a Link State algorithm.
+Option C: To assign dynamic IP addresses to clients on a local network.
+Option D: To manage the transfer of email between mail servers.
+Correct Answer: B
+Motivation: OSPF is an Interior Gateway Protocol (IGP) that uses the Link State algorithm (based on Dijkstra). Each router builds a complete map of the network topology to calculate the best path.
+
+Question 2
+Question: In a dual-bus network topology (like DQDB), which node is statistically the most disadvantaged in terms of transmission access?
+Option A: The node located at the head of the bus.
+Option B: The node located at the end of the bus.
+Option C: The node located in the center of the bus.
+Option D: All nodes have exactly the same access probability.
+Correct Answer: C
+Motivation: In a dual-bus topology, nodes at the ends generate the empty slots or see them first. The central nodes must wait for empty slots left free by upstream nodes in both directions, making them statistically more disadvantaged in accessing the medium.
+
+Question 3
+Question: What is the main purpose of the "Handover" mechanism in cellular networks (e.g., GSM)?
+Option A: To encrypt voice data for security.
+Option B: To switch the connection from one cell to another without interrupting active communication.
+Option C: To locate a user for an incoming call when they are idle.
+Option D: To compress the digital signal before transmission.
+Correct Answer: B
+Motivation: Handover (or handoff) is the fundamental process in mobile networks that allows a mobile terminal to pass from one cell (base station) to another while maintaining the call or data session active and uninterrupted.
+
+Question 4
+Question: What functionality does the ATM Adaptation Layer (AAL) provide in an ATM network?
+Option A: It routes cells based on the VPI/VCI labels.
+Option B: It segments larger packets from upper layers into 53-byte cells and reassembles them at the destination.
+Option C: It modulates the digital signal onto the optical fiber.
+Option D: It performs error checking on the cell header only.
+Correct Answer: B
+Motivation: ATM uses fixed-size cells (53 bytes). The AAL layer is responsible for adapting upper-layer protocols (which use variable-length packets) by segmenting them into cells at the source and reassembling them at the destination.
+
+Question 5
+Question: In the context of the OSI model, which layer is responsible for encryption and data compression?
+Option A: Application Layer.
+Option B: Presentation Layer.
+Option C: Session Layer.
+Option D: Transport Layer.
+Correct Answer: B
+Motivation: The Presentation Layer (Layer 6) handles the syntax and semantics of the information exchanged. Its typical functions include data encoding, compression, and encryption to ensure data is readable by the receiving system.
+
+Question 6
+Question: Using Manchester encoding, if the data transmission rate is 100 Mbps, what is the required modulation rate (baud rate)?
+Option A: 50 Mbaud.
+Option B: 100 Mbaud.
+Option C: 200 Mbaud.
+Option D: 400 Mbaud.
+Correct Answer: C
+Motivation: Manchester encoding involves a signal transition in the middle of every bit to ensure synchronization. Therefore, each bit requires two physical signal elements. The Baud rate is double the Bit rate (100 Mbps×2=200 Mbaud).
+
+Question 7
+Question: According to the EIA RS-232C electrical standard, the logic value "1" is represented by:
+Option A: A voltage between +5V and +15V.
+Option B: A voltage between -3V and -15V (Negative Voltage).
+Option C: 0 Volts.
+Option D: A current of 20 mA.
+Correct Answer: B
+Motivation: The RS-232 standard uses negative logic for data. A logic "1" (Mark) is represented by a negative voltage (typically -3V to -15V), while a logic "0" (Space) is represented by a positive voltage (+3V to +15V).
+
+Question 8
+Question: What is the maximum length of a cable segment in a 10BASE2 (Thin Ethernet) network?
+Option A: 100 meters.
+Option B: 185 meters.
+Option C: 500 meters.
+Option D: 1000 meters.
+Correct Answer: B
+Motivation: The 10BASE2 standard (Thin Coax) specifies a maximum segment length of 185 meters (often rounded to 200m in general discussions, but 185m is the strict technical limit). 100m is for UTP (10BaseT), and 500m is for Thick Ethernet (10Base5).
+
+Question 9
+Question: Which of the following best describes the function of a firewall?
+Option A: It converts analog signals to digital signals.
+Option B: It checks the legality of network service requests to protect internal resources from unauthorized access.
+Option C: It amplifies the physical signal to extend the cable length.
+Option D: It assigns IP addresses dynamically to hosts.
+Correct Answer: B
+Motivation: A firewall is a security device or software that monitors and filters incoming and outgoing network traffic based on predetermined security rules, protecting the internal network from external threats.
+
+Question 10
+Question: In a Token Ring LAN, when is a station allowed to transmit data?
+Option A: Whenever it detects the channel is idle (Carrier Sense).
+Option B: Only after it captures the token circulating in the ring.
+Option C: When the master node polls it.
+Option D: At a fixed time slot assigned during configuration.
+Correct Answer: B
+Motivation: Token Ring is a deterministic protocol based on token passing. A station can only transmit when it receives the free "token" that circulates around the ring, thus avoiding collisions.
+
+Question 11
+Question: What is the difference between a Repeater and a Bridge?
+Option A: A Repeater routes based on IP; a Bridge routes based on MAC.
+Option B: A Repeater amplifies the signal at Layer 1; a Bridge filters and forwards frames based on MAC addresses at Layer 2.
+Option C: A Bridge connects networks with different protocols; a Repeater connects identical networks.
+Option D: There is no functional difference; they are synonyms.
+Correct Answer: B
+Motivation: A Repeater (Hub) operates at Layer 1 (Physical) and regenerates the signal to all ports, extending the collision domain. A Bridge operates at Layer 2 (Data Link), analyzing MAC addresses to decide whether to forward or filter frames, thus separating collision domains.
+
+Question 12
+Question: What is the "Hamming distance" required to detect d errors?
+Option A: d
+Option B: d+1
+Option C: 2d+1
+Option D: d/2
+Correct Answer: B
+Motivation: To detect d errors, a code needs a minimum Hamming distance of d+1. This ensures that any combination of d bit flips will not result in another valid codeword. To correct d errors, the distance must be 2d+1.
+
+Question 13
+Question: Which protocol is used to manage and monitor network devices (routers, switches, servers)?
+Option A: SMTP
+Option B: SNMP
+Option C: FTP
+Option D: HTTP
+Correct Answer: B
+Motivation: SNMP (Simple Network Management Protocol) is the standard application-layer protocol used for managing and monitoring network devices. It allows a manager to query agents for status and statistics.
+
+Question 14
+Question: In the HDLC protocol, if the bit string "01011111001" appears in the data, what is the output after bit stuffing?
+Option A: 01011111101
+Option B: 010111110001
+Option C: 010111101001
+Option D: 010111110010
+Correct Answer: B
+Motivation: Bit stuffing inserts a '0' after five consecutive '1's to prevent the data from mimicking the flag (01111110). In "01011111001", there are five consecutive '1's. A '0' is inserted immediately after the fifth '1', resulting in "010111110001".
+
+Question 15
+Question: Why is CRC (Cyclic Redundancy Check) widely used in data communications?
+Option A: Because it can detect burst errors of limited length efficiently.
+Option B: Because it allows for error correction without retransmission.
+Option C: Because it encrypts data for security.
+Option D: Because it compresses the data size.
+Correct Answer: A
+Motivation: CRC is very effective at detecting common transmission errors, especially burst errors (where multiple consecutive bits are corrupted), as long as the burst length does not exceed the length of the generator polynomial. It is an error detection scheme, not correction.
+
+Question 16
+Question: What is the main advantage of using a Switch instead of a Hub?
+Option A: A Switch works at Layer 1 and is cheaper.
+Option B: A Switch divides the collision domain, allowing full-duplex communication on each port.
+Option C: A Switch translates IP addresses to MAC addresses.
+Option D: A Switch amplifies the signal more than a Hub.
+Correct Answer: B
+Motivation: A Hub forwards every signal to all ports, creating a single large collision domain. A Switch (Layer 2) intelligently forwards frames only to the destination port, creating a separate collision domain for each port and enabling simultaneous full-duplex transmissions.
+
+Question 17
+Question: In the context of sliding window protocols, if the sender receives a cumulative ACK N, what does it mean?
+Option A: Only packet N has been received correctly.
+Option B: Packet N was lost and needs retransmission.
+Option C: All packets up to N−1 have been received correctly, and the receiver expects N.
+Option D: The connection is closed.
+Correct Answer: C
+Motivation: In protocols like TCP or Go-Back-N, acknowledgments are typically cumulative. An ACK with number N confirms the receipt of all bytes/packets prior to N and indicates that the receiver is now waiting for packet (or byte) number N.
+
+Question 18
+Question: What specific function does the "Poll/Final" (P/F) bit serve in HDLC/LAPB frames?
+Option A: It indicates the end of the connection.
+Option B: It allows a primary station to solicit a response (Poll) or a secondary station to indicate the end of transmission (Final).
+Option C: It serves as a parity bit for error checking.
+Option D: It indicates the priority of the frame.
+Correct Answer: B
+Motivation: In HDLC-based protocols, the P/F bit is used for control. When set to 'P' (Poll) by the primary, it demands an immediate response. When set to 'F' (Final) by the secondary, it indicates the response to a Poll or the end of a frame sequence.
+
+Question 19
+Question: Which layer of the TCP/IP model corresponds to the ISO/OSI Network Layer?
+Option A: Application Layer.
+Option B: Internet Layer.
+Option C: Host-to-Network Layer.
+Option D: Transport Layer.
+Correct Answer: B
+Motivation: The TCP/IP model's "Internet Layer" (where IP operates) is functionally equivalent to the "Network Layer" (Layer 3) of the OSI model. Both handle logical addressing and routing.
+
+Question 20
+Question: What characterizes a "Connectionless" service (like UDP or IP)?
+Option A: A setup phase is required before data transfer.
+Option B: Packets are treated independently, and delivery order is not guaranteed.
+Option C: It guarantees reliable delivery and flow control.
+Option D: Resources are reserved for the duration of the communication.
+Correct Answer: B
+Motivation: In a connectionless service (Datagram), there is no handshake or path setup. Each packet is routed independently based on the destination address. This provides flexibility and robustness but does not guarantee order or delivery (Best Effort).
+
+Question 21
+Question: What is the specific function of a demodulator within a Modem?
+Option A: To convert digital data into analog signals.
+Option B: To convert analog signals into digital data.
+Option C: To multiplex several signals into one.
+Option D: To amplify the signal for long-distance transmission.
+Correct Answer: B
+Motivation: A Modem (MOdulator-DEModulator) performs two functions. The modulator converts digital data from the computer into analog signals for the telephone line. The demodulator performs the reverse operation: it converts the received analog signals back into digital data for the computer.
+
+Question 22
+Question: In the RIP (Routing Information Protocol), what is the maximum number of hops allowed to reach a destination?
+Option A: 15
+Option B: 16
+Option C: 128
+Option D: Unlimited
+Correct Answer: A
+Motivation: RIP uses hop count as its metric. It defines infinity as 16 hops to prevent routing loops (count-to-infinity problem). Therefore, the maximum valid number of hops to a reachable network is 15.
+
+Question 23
+Question: How many TCP connections does an FTP session typically require?
+Option A: One connection for both commands and data.
+Option B: Two connections: one for control (commands) and one for data transfer.
+Option C: Connectionless UDP is used instead of TCP.
+Option D: One connection for the client and one for the DNS server.
+Correct Answer: B
+Motivation: FTP (File Transfer Protocol) is unique in that it separates control and data. It establishes a "Control Connection" (port 21) for sending commands and a separate "Data Connection" (port 20 or dynamic) for the actual file transfer.
+
+Question 24
+Question: What is the definition of HTTP?
+Option A: A protocol for resolving hostnames to IP addresses.
+Option B: The protocol used for linking and transferring documents (web pages) between a client and a server on the World Wide Web.
+Option C: A language used to describe the structure of web pages.
+Option D: A protocol for secure email transmission.
+Correct Answer: B
+Motivation: HTTP (HyperText Transfer Protocol) is the application layer protocol used for the World Wide Web. It defines how messages are formatted and transmitted between browsers (clients) and web servers. HTML is the language (Option C), not the protocol.
+
+Question 25
+Question: When an Ethernet Switch receives a frame with a broadcast destination address (FF:FF:FF:FF:FF:FF), what does it do?
+Option A: It sends the frame to the default gateway only.
+Option B: It discards the frame to prevent broadcast storms.
+Option C: It forwards the frame out of all ports except the one it was received on.
+Option D: It sends the frame only to the port with the lowest MAC address.
+Correct Answer: C
+Motivation: Switches forward broadcast frames (and frames with unknown unicast destinations) to all connected ports except the incoming port. This ensures the broadcast reaches all devices in the collision domain (or VLAN).
+
+Question 26
+Question: Which of the following is a key characteristic of the UDP protocol?
+Option A: It guarantees data delivery via acknowledgments.
+Option B: It provides an unreliable, connectionless service without flow control.
+Option C: It reorders packets that arrive out of sequence.
+Option D: It establishes a 3-way handshake before sending data.
+Correct Answer: B
+Motivation: UDP (User Datagram Protocol) is a "best effort" protocol. Unlike TCP, it does not establish a connection, does not guarantee delivery (no ACKs), and does not reorder packets. It is used for applications where speed is preferred over reliability.
+
+Question 27
+Question: What is the maximum transmission rate supported by Category 5 UTP (Unshielded Twisted Pair) cable according to standards?
+Option A: 10 Mbps
+Option B: 100 Mbps
+Option C: 1000 Mbps (1 Gbps)
+Option D: 20 Mbps
+Correct Answer: B
+Motivation: While modern variants (Cat 5e) support Gigabit, the base standard for Category 5 UTP was designed to support Fast Ethernet at 100 Mbps (100MHz bandwidth).
+
+Question 28
+Question: In the Ethernet standard "10BASE-T", what does the "T" stand for?
+Option A: Thick Coaxial Cable.
+Option B: Thin Coaxial Cable.
+Option C: Twisted Pair.
+Option D: Terabit speed.
+Correct Answer: C
+Motivation: The nomenclature is: Speed (10 Mbps), Signal type (Baseband), Medium (T = Twisted Pair). "2" stands for Thin Coax (approx 200m), "5" for Thick Coax (500m), "F" for Fiber.
+
+Question 29
+Question: Which switching technique requires the entire packet to be received by a node before it can be forwarded to the next link?
+Option A: Circuit Switching.
+Option B: Cut-through Switching.
+Option C: Store-and-Forward.
+Option D: Virtual Circuit Switching.
+Correct Answer: C
+Motivation: Store-and-forward switching dictates that a switch/router must receive the full frame/packet (store it in buffer) to check for errors (CRC) and read the destination address before beginning transmission on the outgoing link.
+
+Question 30
+Question: Why is CRC (Cyclic Redundancy Check) used in network communications?
+Option A: To encrypt the data payload.
+Option B: To detect transmission errors by appending a check code based on polynomial division.
+Option C: To compress the data to save bandwidth.
+Option D: To route the packet to the correct destination.
+Correct Answer: B
+Motivation: CRC is an error-detecting code. The sender calculates a remainder (checksum) based on the data and a generator polynomial. The receiver performs the same calculation; if the results match (remainder is zero), the data is assumed correct. It does not correct errors or encrypt data.
+
+Question 31
+Question: Which device is used to interconnect two networks with completely different architectures and protocols (e.g., SNA and TCP/IP) at layers above the Network layer?
+Option A: Repeater.
+Option B: Bridge.
+Option C: Router.
+Option D: Gateway.
+Correct Answer: D
+Motivation: A Gateway acts as a protocol converter/translator between disparate systems, often operating at the Application layer (Layer 7). Repeaters are Layer 1, Bridges Layer 2, and Routers Layer 3.
+
+Question 32
+Question: What is the default subnet mask for a Class B IP address?
+Option A: 255.0.0.0
+Option B: 255.255.0.0
+Option C: 255.255.255.0
+Option D: 255.255.255.255
+Correct Answer: B
+Motivation: In the legacy classful addressing system: Class A uses /8 (255.0.0.0), Class B uses /16 (255.255.0.0), and Class C uses /24 (255.255.255.0).
+
+Question 33
+Question: Which protocol is used for the delivery of outgoing email messages from a client to a server, and between mail servers?
+Option A: POP3
+Option B: IMAP
+Option C: SMTP
+Option D: HTTP
+Correct Answer: C
+Motivation: SMTP (Simple Mail Transfer Protocol) is a "push" protocol used to send mail. POP3 and IMAP are "pull" protocols used by clients to retrieve mail from a server.
+
+Question 34
+Question: The "Ping" utility uses which protocol to verify connectivity?
+Option A: TCP
+Option B: UDP
+Option C: ARP
+Option D: ICMP
+Correct Answer: D
+Motivation: Ping sends ICMP "Echo Request" packets and waits for ICMP "Echo Reply" packets. It operates at Layer 3 (on top of IP) but does not use Transport layer protocols like TCP or UDP.
+
+Question 35
+Question: In Full-Duplex Ethernet mode, is the CSMA/CD protocol used?
+Option A: Yes, it is essential to prevent collisions.
+Option B: No, because full-duplex uses separate channels for sending and receiving, eliminating collisions.
+Option C: Yes, but only for flow control.
+Option D: Only if the cable length exceeds 100 meters.
+Correct Answer: B
+Motivation: Full-duplex Ethernet (typically with switches) uses dedicated pairs for transmit and receive. Since there is no shared medium contention, collisions cannot occur, and the CSMA/CD algorithm is disabled/ignored.
+
+Question 36
+Question: In the TCP Slow Start phase, how does the congestion window (cwnd) grow?
+Option A: Linearly (adds 1 MSS per RTT).
+Option B: Exponentially (doubles every RTT).
+Option C: It remains constant.
+Option D: It decreases by half every RTT.
+Correct Answer: B
+Motivation: In Slow Start, for every ACK received, the window increases by 1 MSS. Since a window of size N produces N ACKs, the window effectively doubles every Round Trip Time (1 -> 2 -> 4 -> 8), resulting in exponential growth until the threshold (ssthresh) is reached.
+
+Question 37
+Question: What are the three steps in Pulse Code Modulation (PCM) for digitizing analog signals?
+Option A: Amplification, Modulation, Transmission.
+Option B: Sampling, Quantization, Encoding.
+Option C: Encryption, Compression, Segmentation.
+Option D: Framing, Error Checking, Addressing.
+Correct Answer: B
+Motivation: To convert analog to digital (PCM): 1. Sampling (measuring amplitude at discrete intervals), 2. Quantization (mapping samples to discrete levels), 3. Encoding (converting levels to binary).
+
+Question 38
+Question: Time Division Multiplexing (TDM) works by:
+Option A: Dividing the frequency band into smaller sub-bands.
+Option B: Allowing users to transmit using unique orthogonal codes.
+Option C: Dividing the transmission time into slots and assigning them cyclically to different channels.
+Option D: Sending packets only when a user has data (statistically).
+Correct Answer: C
+Motivation: TDM splits the timeline into fixed slots (frames). Each user/channel is assigned a specific time slot in every frame to transmit data, guaranteeing bandwidth but potentially wasting it if the user is idle.
+
+Question 39
+Question: In the DNS hierarchy, which servers are at the top?
+Option A: Authoritative Name Servers.
+Option B: Root Name Servers.
+Option C: Local Name Servers.
+Option D: Top-Level Domain (TLD) Servers.
+Correct Answer: B
+Motivation: The DNS system is a tree structure. The root of the tree is served by the Root Name Servers (represented by a dot "."). Below them are the TLD servers (com, org, it), and below those are authoritative servers.
+
+Question 40
+Question: What is a primary benefit of fiber optic cable compared to copper wire?
+Option A: It can carry power to devices (PoE).
+Option B: It is immune to electromagnetic interference (EMI).
+Option C: It is cheaper to install and terminate.
+Option D: It uses lower voltages.
+Correct Answer: B
+Motivation: Fiber optics transmit data using light pulses through glass or plastic. Unlike copper, which carries electricity, light is completely immune to electromagnetic interference (EMI), crosstalk, and radio frequency interference.
+
+Question 41
+Question: In the context of the OSI reference model, what is the specific relationship between an (N)-entity and an (N-1)-SAP (Service Access Point)?
+Option A: One (N)-entity can be associated with multiple (N-1)-SAPs.
+Option B: One (N)-entity must correspond to exactly one (N-1)-SAP.
+Option C: An (N)-entity cannot use an (N-1)-SAP.
+Option D: (N)-SAPs are only used by (N+1)-entities.
+Correct Answer: A
+Motivation: According to the OSI model principles, an entity at layer N can utilize services from the layer below (N-1) through one or more Service Access Points (SAPs). This allows for flexibility in addressing and multiplexing.
+
+Question 42
+Question: Which of the following best describes the "Count-to-Infinity" problem?
+Option A: A routing loop caused by slow convergence in Distance Vector protocols where bad news travels slowly.
+Option B: The limitless increase of the TCP congestion window during Slow Start.
+Option C: The unlimited number of hops an IP packet can take if TTL is not set.
+Option D: The problem of assigning infinite IP addresses in IPv6.
+Correct Answer: A
+Motivation: Count-to-Infinity is a specific problem in Distance Vector routing algorithms (like RIP). When a link breaks or a cost increases, routers may bounce incorrect routing information back and forth, incrementing the distance metric indefinitely (or until a predefined maximum) before converging.
+
+Question 43
+Question: In a token bus network (IEEE 802.4), if a node wants to send data, it must:
+Option A: Detect a collision before stopping transmission.
+Option B: Wait until it receives the token.
+Option C: Wait for a random backoff time.
+Option D: Send a request to the central master node.
+Correct Answer: B
+Motivation: Similar to Token Ring, the Token Bus protocol is deterministic. A station can only transmit when it holds the token, which is passed logically from station to station in a defined sequence, regardless of their physical placement on the bus.
+
+Question 44
+Question: What is the primary purpose of the "2-way handshake" vs "3-way handshake" distinction in connection establishment?
+Option A: 2-way is sufficient for unreliable networks; 3-way is required for reliable networks to prevent old duplicate connection requests from establishing a false connection.
+Option B: 2-way is used by TCP; 3-way is used by UDP.
+Option C: 3-way handshake consumes less bandwidth.
+Option D: There is no functional difference.
+Correct Answer: A
+Motivation: A simple 2-way handshake is susceptible to delayed duplicate packets re-establishing a connection erroneously. The 3-way handshake (SYN, SYN-ACK, ACK) used by TCP solves this by requiring the initiator to confirm the server's acknowledgment, proving that the request is fresh and not an old duplicate.
+
+Question 45
+Question: What is the function of the "Preamble" in an Ethernet frame?
+Option A: It contains the source and destination IP addresses.
+Option B: It is a pattern of alternating 0s and 1s used to synchronize the receiver's clock with the sender.
+Option C: It indicates the length of the data payload.
+Option D: It performs error checking on the frame header.
+Correct Answer: B
+Motivation: The Ethernet preamble (7 bytes of 10101010) allows the physical layer circuitry at the receiver to "wake up" and lock onto the timing (clock synchronization) of the incoming signal before the actual frame content begins.
+
+Question 46
+Question: In the context of HTTP, what does the method "HEAD" do?
+Option A: It requests the server to delete the resource.
+Option B: It requests the server to return only the header information of the resource, without the message body.
+Option C: It uploads a file to the header of the website.
+Option D: It establishes a persistent connection.
+Correct Answer: B
+Motivation: The HEAD method is identical to GET, except that the server MUST NOT return a message-body in the response. It is useful for retrieving meta-information (like validity, modification time, or size) without transferring the entire content.
+
+Question 47
+Question: Which of the following is a characteristic of a "Circuit-Switched" network?
+Option A: Data is split into packets and routed independently.
+Option B: Resources (bandwidth) are reserved for the duration of the communication session.
+Option C: Congestion control is handled by dropping packets.
+Option D: It is inherently connectionless.
+Correct Answer: B
+Motivation: In circuit switching (like legacy telephone networks), a dedicated physical path is established. The bandwidth is reserved exclusively for that session, ensuring constant performance but potentially wasting capacity during silence (no statistical multiplexing).
+
+Question 48
+Question: Ideally, what happens to the channel utilization (efficiency) of a CSMA/CD network as the distance between nodes increases?
+Option A: It stays constant.
+Option B: It increases.
+Option C: It decreases.
+Option D: It becomes zero immediately.
+Correct Answer: C
+Motivation: The efficiency of CSMA/CD depends on the ratio of propagation delay to transmission time. As the distance (and thus propagation delay) increases, the "vulnerable period" during which a collision can occur increases. This forces the minimum frame size to be larger or reduces the effective throughput, decreasing efficiency.
+
+Question 49
+Question: Which protocol is responsible for mapping a MAC address to an IP address (the reverse of ARP)?
+Option A: DNS
+Option B: RARP (Reverse Address Resolution Protocol)
+Option C: ICMP
+Option D: SMTP
+Correct Answer: B
+Motivation: While ARP resolves IP to MAC, RARP (Reverse ARP) allows a physical machine (e.g., a diskless workstation) to broadcast its physical MAC address to request its logical IP address from a server. (Note: DHCP has largely superseded RARP).
+
+Question 50
+Question: What does the "Time to Live" (TTL) field in an IP packet prevent?
+Option A: Duplicate acknowledgments.
+Option B: Packets circulating indefinitely in a routing loop.
+Option C: Unauthorized access to the packet data.
+Option D: Fragmentation of the packet.
+Correct Answer: B
+Motivation: The TTL field is a counter that is decremented by 1 at each router hop. If it reaches zero, the packet is discarded. This ensures that if a routing loop exists, packets will eventually "die" rather than consuming bandwidth forever.
+
+Question 51
+Question: In the TCP/IP model, which layer corresponds to the OSI Session Layer?
+Option A: Application Layer.
+Option B: Transport Layer.
+Option C: Internet Layer.
+Option D: Network Interface Layer.
+Correct Answer: A
+Motivation: The TCP/IP model condenses the top three layers of the OSI model (Application, Presentation, Session) into a single "Application Layer". Therefore, functions like session management are handled within the Application layer protocols in TCP/IP.
+
+Question 52
+Question: What is the primary difference between a "Passive" star topology and an "Active" star topology?
+Option A: Passive uses routers; Active uses switches.
+Option B: In Passive, the central node does not regenerate the signal (it acts as a connector/splitter); in Active, the central node regenerates/repeats the signal.
+Option C: Passive is for fiber; Active is for copper.
+Option D: There is no difference.
+Correct Answer: B
+Motivation: In a passive star (like some optical splitters), the signal energy is simply divided. In an active star (like an Ethernet Hub or Switch), the central device is an active electronic component that receives the signal, boosts/regenerates it, and retransmits it, allowing for greater distances and better signal quality.
+
+Question 53
+Question: What is the specific role of the "Fragment Offset" field in the IP header?
+Option A: It indicates the length of the header.
+Option B: It identifies the original datagram to which the fragment belongs.
+Option C: It specifies where the fragment fits in the original datagram relative to the beginning.
+Option D: It serves as a checksum for the data.
+Correct Answer: C
+Motivation: When a packet is fragmented, the Fragment Offset tells the reassembling host exactly where the payload of this specific fragment belongs within the original, larger IP packet stream. It is measured in 8-byte blocks.
+
+Question 54
+Question: Which of the following is NOT a function of the Presentation Layer in the OSI model?
+Option A: Data Encryption.
+Option B: Data Compression.
+Option C: Routing of packets.
+Option D: Character code translation (e.g., ASCII to EBCDIC).
+Correct Answer: C
+Motivation: Routing is the defining function of the Network Layer (Layer 3). The Presentation Layer (Layer 6) handles syntax and semantics, such as encryption, compression, and formatting.
+
+Question 55
+Question: What is the "baud rate" definition?
+Option A: The number of bits transmitted per second.
+Option B: The number of signal changes (symbols) per second.
+Option C: The frequency of the carrier wave.
+Option D: The number of bytes in a packet.
+Correct Answer: B
+Motivation: Baud rate refers to the modulation rate, specifically the number of times the physical signal changes state per second. Bit rate (bps) can be higher than baud rate if each signal symbol represents multiple bits (e.g., in 16-QAM, 1 baud = 4 bits).
+
+Question 56
+Question: Why is a "Guard Band" necessary in Frequency Division Multiplexing (FDM)?
+Option A: To increase the data rate.
+Option B: To prevent interference (crosstalk) between adjacent frequency channels.
+Option C: To synchronize the time slots.
+Option D: To encryption the data.
+Correct Answer: B
+Motivation: In FDM, different signals share the medium by using different frequencies. Because filters are not perfect, "Guard Bands" (unused strips of frequency) are placed between the allocated channels to ensure that the sidebands of one signal do not overlap and interfere with the adjacent signal.
+
+Question 57
+Question: What is the maximum length of the payload (data field) in a standard Ethernet frame (MTU)?
+Option A: 64 bytes.
+Option B: 1500 bytes.
+Option C: 1518 bytes.
+Option D: 4096 bytes.
+Correct Answer: B
+Motivation: The Maximum Transmission Unit (MTU) for standard Ethernet is 1500 bytes. The total frame size max is 1518 bytes (1500 payload + 14 header + 4 CRC), but the payload limit specifically is 1500.
+
+Question 58
+Question: In the context of flow control, what is "Sliding Window"?
+Option A: A physical window in the optical fiber.
+Option B: A mechanism where the sender maintains a range of sequence numbers it is allowed to send without receiving an acknowledgement.
+Option C: A method to slide data into the application layer.
+Option D: A type of routing algorithm.
+Correct Answer: B
+Motivation: Sliding Window is the standard technique for flow and error control (like in TCP). It allows the sender to have multiple packets "in flight" (unacknowledged) up to a certain limit (the window size), improving efficiency over Stop-and-Wait. As ACKs arrive, the window "slides" forward to allow new packets to be sent.
+
+Question 59
+Question: Which device operates at all 7 layers of the OSI model and acts as a protocol converter?
+Option A: Hub.
+Option B: Switch.
+Option C: Router.
+Option D: Gateway.
+Correct Answer: D
+Motivation: A Gateway is a device used to connect two networks that use entirely different protocols (e.g., connecting a TCP/IP network to a legacy mainframe SNA network). It must translate data at all layers, up to the application layer. Hubs are Layer 1, Switches Layer 2, Routers Layer 3.
+
+Question 60
+Question: What is the primary advantage of using Fiber Optic cable over Copper cable?
+Option A: Lower cost of installation.
+Option B: Immunity to electromagnetic interference (EMI) and much higher bandwidth.
+Option C: Easier to splice and repair.
+Option D: Can carry power to devices easily.
+Correct Answer: B
+Motivation: Fiber optics use light, which is not affected by electromagnetic noise (unlike copper). Furthermore, the physics of light allows for extremely high data rates (Terabits/s) and longer transmission distances without attenuation compared to copper.

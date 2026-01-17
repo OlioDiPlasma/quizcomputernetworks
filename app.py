@@ -36,8 +36,10 @@ def load_questions(filename):
         with open(filename, 'r', encoding='utf-8') as f:
             content = f.read()
     except FileNotFoundError:
-        st.error(f"Error: File '{filename}' not found!")
+        # Non blocchiamo l'app se manca un file, ritorniamo lista vuota
         return []
+
+    # HO RIMOSSO LA PULIZIA AUTOMATICA (re.sub) COME RICHIESTO
 
     parts = re.split(r'Question (\d+)', content)
     parsed_data = []
@@ -50,6 +52,7 @@ def load_questions(filename):
         q_data = {}
         q_data['id'] = q_id
         
+        # Regex per catturare il testo della domanda
         q_match = re.search(r'Question:\s*(.*?)\s*Option A:', raw, re.DOTALL)
         if not q_match: continue
         q_data['text'] = q_match.group(1).strip()
@@ -109,8 +112,6 @@ if 'user_answers' not in st.session_state:
     st.session_state.user_answers = {}
 if 'seen_ids' not in st.session_state:
     st.session_state.seen_ids = set()
-
-# NUOVI STATI PER LA MEMORIA DELL'ULTIMO ESAME
 if 'last_result' not in st.session_state:
     st.session_state.last_result = None
 if 'current_exam_label' not in st.session_state:
@@ -119,13 +120,15 @@ if 'current_exam_label' not in st.session_state:
 # --- INTERFACE ---
 st.title("🎓 Computer Networks Exam Simulator")
 
+# CARICAMENTO DATI
 questions_db = load_questions("domande.txt")
+extra_db = load_questions("domextra.txt")
 categories_db = load_categories("categorie.txt")
 
 # --- 1. START MENU ---
 if not st.session_state.exam_started:
     
-    # --- MOSTRA ULTIMO RISULTATO (SE ESISTE) ---
+    # --- MOSTRA ULTIMO RISULTATO ---
     if st.session_state.last_result:
         res = st.session_state.last_result
         st.markdown(f"""
@@ -135,67 +138,71 @@ if not st.session_state.exam_started:
             <p><b>Context:</b> {res['label']}</p>
         </div>
         """, unsafe_allow_html=True)
-    # -------------------------------------------
 
-# --- CONFIGURATION SECTION ---
+    # --- CONFIGURATION SECTION ---
     st.markdown("### ⚙️ Exam Configuration")
     
     col_config1, col_config2 = st.columns([1, 2])
     
     with col_config1:
-        # 1. Aggiunta l'opzione "Sequential" al Radio Button
-        mode = st.radio("Select Mode:", ["Random (All Questions)", "By Category", "Sequential (Chunks of 33)"])
+        mode = st.radio("Select Mode:", [
+            "Random (All Questions)", 
+            "By Category", 
+            "Sequential (Chunks of 33)", 
+            "Extra Questions (Separate Pool)"
+        ])
     
     selected_pool = []
     current_label = "Random Mode" 
     
     with col_config2:
-        # --- LOGICA PER CATEGORIE ---
+        # --- A. LOGICA PER CATEGORIE ---
         if mode == "By Category" and categories_db:
             selected_cats = st.multiselect("Select Categories:", list(categories_db.keys()))
-            
             if selected_cats:
                 allowed_ids = set()
                 for cat in selected_cats:
                     allowed_ids.update(categories_db[cat])
                 selected_pool = [q for q in questions_db if q['id'] in allowed_ids]
-                
-                if len(selected_cats) > 2:
-                    cat_str = f"{len(selected_cats)} Categories Selected"
-                else:
-                    cat_str = ", ".join(selected_cats)
-                current_label = f"Category: {cat_str}"
+                current_label = f"Category: {len(selected_cats)} selected"
             else:
                 st.warning("Please select at least one category.")
                 current_label = "No Category Selected"
 
-        # --- NUOVA LOGICA: SEQUENTIAL (CHUNKS) ---
+        # --- B. LOGICA SEQUENTIAL (CHUNKS) ---
         elif mode == "Sequential (Chunks of 33)":
             chunk_size = 33
             total_qs = len(questions_db)
-            # Calcolo quanti blocchi servono
-            num_chunks = (total_qs + chunk_size - 1) // chunk_size 
-            
-            chunk_options = []
-            for i in range(num_chunks):
-                start_num = i * chunk_size + 1
-                end_num = min((i + 1) * chunk_size, total_qs)
-                chunk_options.append(f"Part {i+1} (Questions {start_num}-{end_num})")
-            
-            selected_chunk_label = st.selectbox("Select Exam Part:", chunk_options)
-            
-            # Recupero l'indice selezionato (0 per Part 1, 1 per Part 2, ecc.)
-            chunk_idx = chunk_options.index(selected_chunk_label)
-            
-            # Slicing della lista domande
-            start_idx = chunk_idx * chunk_size
-            end_idx = start_idx + chunk_size
-            
-            # Python gestisce l'end_idx > lunghezza lista automaticamente
-            selected_pool = questions_db[start_idx:end_idx]
-            current_label = f"Sequential: {selected_chunk_label}"
+            if total_qs > 0:
+                num_chunks = (total_qs + chunk_size - 1) // chunk_size 
+                chunk_options = [f"Part {i+1} ({i*chunk_size+1}-{min((i+1)*chunk_size, total_qs)})" for i in range(num_chunks)]
+                selected_chunk_label = st.selectbox("Select Exam Part:", chunk_options)
+                
+                # Ottiene indice dal testo (Part 1 -> indice 0)
+                chunk_idx = chunk_options.index(selected_chunk_label)
+                
+                # Slicing sicuro
+                start_slice = chunk_idx * chunk_size
+                end_slice = start_slice + chunk_size
+                selected_pool = questions_db[start_slice:end_slice]
+                current_label = f"Sequential: {selected_chunk_label}"
+            else:
+                st.error("Main database is empty.")
 
-        # --- LOGICA RANDOM CLASSICA ---
+        # --- C. LOGICA EXTRA QUESTIONS (Nuova) ---
+        elif mode == "Extra Questions (Separate Pool)":
+            # Creiamo una copia delle domande extra modificando l'ID
+            selected_pool = []
+            if extra_db:
+                for q in extra_db:
+                    q_copy = q.copy() # Copia per non sporcare il cache originale
+                    q_copy['id'] = f"{q['id']}E" # Aggiunge E all'ID (es. 12 -> 12E)
+                    selected_pool.append(q_copy)
+                current_label = "Extra Questions (Random Mode)"
+            else:
+                st.warning("File 'domextra.txt' not found or empty.")
+
+        # --- D. LOGICA RANDOM CLASSICA ---
         else:
             selected_pool = questions_db
             current_label = "Random Mode (All Topics)"
@@ -218,27 +225,26 @@ if not st.session_state.exam_started:
     
     # --- ACTION BUTTONS ---
     col1, col2 = st.columns(2)
+    disable_start = len(selected_pool) == 0
 
-    # Modificata per accettare label_text
     def start_exam(n, pool, label_text):
         if len(pool) == 0:
             st.error("No questions available!")
             return
         
         if n > len(pool):
-            st.toast(f"⚠️ Category has only {len(pool)} questions. Exam reduced to {len(pool)}.")
+            st.toast(f"⚠️ Pool has only {len(pool)} questions. Exam reduced to {len(pool)}.")
             n = len(pool)
         
-        # Salviamo l'etichetta dell'esame corrente nello stato
         st.session_state.current_exam_label = label_text
 
-        # 1. Separa le domande
+        # 1. Separa le domande (Seen vs Unseen)
         unseen_qs = [q for q in pool if q['id'] not in st.session_state.seen_ids]
         seen_qs = [q for q in pool if q['id'] in st.session_state.seen_ids]
         
         selection_raw = []
         
-        # 2. Logica di riempimento
+        # 2. Logica di riempimento (Priorità alle Unseen)
         if len(unseen_qs) >= n:
             selection_raw = random.sample(unseen_qs, n)
         else:
@@ -248,7 +254,7 @@ if not st.session_state.exam_started:
                 selection_raw += random.sample(seen_qs, needed)
                 st.toast(f"⚠️ Only {len(unseen_qs)} new questions available. Added {needed} older ones.")
         
-        # 3. Etichettatura
+        # 3. Etichettatura (NEW vs OLD)
         final_selection = []
         for q in selection_raw:
             q_copy = q.copy()
@@ -266,8 +272,6 @@ if not st.session_state.exam_started:
         st.session_state.exam_started = True
         st.session_state.submitted = False
         st.rerun()
-        
-    disable_start = len(selected_pool) == 0
 
     with col1:
         if st.button("🚀 Quick Test (10 questions)", disabled=disable_start, type="primary"):
@@ -279,7 +283,6 @@ if not st.session_state.exam_started:
 # --- 2. EXAM INTERFACE ---
 elif not st.session_state.submitted:
     with st.form("exam_form"):
-        # Mostra anche qui cosa stiamo facendo
         st.write(f"### Exam in progress: {st.session_state.current_exam_label}")
         
         current_answers = {}
