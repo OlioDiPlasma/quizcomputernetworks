@@ -36,10 +36,7 @@ def load_questions(filename):
         with open(filename, 'r', encoding='utf-8') as f:
             content = f.read()
     except FileNotFoundError:
-        # Non blocchiamo l'app se manca un file, ritorniamo lista vuota
         return []
-
-    # HO RIMOSSO LA PULIZIA AUTOMATICA (re.sub) COME RICHIESTO
 
     parts = re.split(r'Question (\d+)', content)
     parsed_data = []
@@ -254,10 +251,38 @@ if not st.session_state.exam_started:
                 selection_raw += random.sample(seen_qs, needed)
                 st.toast(f"⚠️ Only {len(unseen_qs)} new questions available. Added {needed} older ones.")
         
-        # 3. Etichettatura (NEW vs OLD)
+        # 3. Mescolamento Opzioni e Tagging
         final_selection = []
         for q in selection_raw:
             q_copy = q.copy()
+            
+            # --- SHUFFLE DELLE OPZIONI ---
+            # a. Estrai le risposte e trova il testo di quella corretta
+            original_opts = q['options']
+            correct_key = q['correct'] # es. 'A'
+            correct_text = original_opts.get(correct_key)
+            
+            # b. Crea una lista dei testi e mescolala
+            opt_texts = list(original_opts.values())
+            random.shuffle(opt_texts)
+            
+            # c. Ricostruisci il dizionario e trova la nuova lettera corretta
+            new_options = {}
+            new_correct_key = correct_key # fallback
+            mapping_keys = ['A', 'B', 'C', 'D']
+            
+            for i, text in enumerate(opt_texts):
+                if i < len(mapping_keys):
+                    key = mapping_keys[i]
+                    new_options[key] = text
+                    if text == correct_text:
+                        new_correct_key = key
+            
+            # d. Aggiorna la domanda copiata
+            q_copy['options'] = new_options
+            q_copy['correct'] = new_correct_key
+            # -----------------------------
+
             if q['id'] in st.session_state.seen_ids:
                 q_copy['status_tag'] = "OLD"
             else:
