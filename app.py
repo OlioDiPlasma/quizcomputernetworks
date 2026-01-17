@@ -148,6 +148,10 @@ if not st.session_state.exam_started:
             "Sequential (Chunks of 33)", 
             "Extra Questions (Separate Pool)"
         ])
+        
+        st.markdown("---")
+        # CHECKBOX PER ATTIVARE/DISATTIVARE LO SHUFFLE
+        shuffle_enabled = st.checkbox("🔀 Shuffle Answers", value=False, help="Randomize the order of options (A, B, C, D) to prevent memorizing positions.")
     
     selected_pool = []
     current_label = "Random Mode" 
@@ -175,10 +179,7 @@ if not st.session_state.exam_started:
                 chunk_options = [f"Part {i+1} ({i*chunk_size+1}-{min((i+1)*chunk_size, total_qs)})" for i in range(num_chunks)]
                 selected_chunk_label = st.selectbox("Select Exam Part:", chunk_options)
                 
-                # Ottiene indice dal testo (Part 1 -> indice 0)
                 chunk_idx = chunk_options.index(selected_chunk_label)
-                
-                # Slicing sicuro
                 start_slice = chunk_idx * chunk_size
                 end_slice = start_slice + chunk_size
                 selected_pool = questions_db[start_slice:end_slice]
@@ -186,14 +187,13 @@ if not st.session_state.exam_started:
             else:
                 st.error("Main database is empty.")
 
-        # --- C. LOGICA EXTRA QUESTIONS (Nuova) ---
+        # --- C. LOGICA EXTRA QUESTIONS ---
         elif mode == "Extra Questions (Separate Pool)":
-            # Creiamo una copia delle domande extra modificando l'ID
             selected_pool = []
             if extra_db:
                 for q in extra_db:
-                    q_copy = q.copy() # Copia per non sporcare il cache originale
-                    q_copy['id'] = f"{q['id']}E" # Aggiunge E all'ID (es. 12 -> 12E)
+                    q_copy = q.copy() 
+                    q_copy['id'] = f"{q['id']}E"
                     selected_pool.append(q_copy)
                 current_label = "Extra Questions (Random Mode)"
             else:
@@ -224,7 +224,7 @@ if not st.session_state.exam_started:
     col1, col2 = st.columns(2)
     disable_start = len(selected_pool) == 0
 
-    def start_exam(n, pool, label_text):
+    def start_exam(n, pool, label_text, do_shuffle):
         if len(pool) == 0:
             st.error("No questions available!")
             return
@@ -251,37 +251,34 @@ if not st.session_state.exam_started:
                 selection_raw += random.sample(seen_qs, needed)
                 st.toast(f"⚠️ Only {len(unseen_qs)} new questions available. Added {needed} older ones.")
         
-        # 3. Mescolamento Opzioni e Tagging
+        # 3. Mescolamento Opzioni (Opzionale) e Tagging
         final_selection = []
         for q in selection_raw:
             q_copy = q.copy()
             
-            # --- SHUFFLE DELLE OPZIONI ---
-            # a. Estrai le risposte e trova il testo di quella corretta
-            original_opts = q['options']
-            correct_key = q['correct'] # es. 'A'
-            correct_text = original_opts.get(correct_key)
-            
-            # b. Crea una lista dei testi e mescolala
-            opt_texts = list(original_opts.values())
-            random.shuffle(opt_texts)
-            
-            # c. Ricostruisci il dizionario e trova la nuova lettera corretta
-            new_options = {}
-            new_correct_key = correct_key # fallback
-            mapping_keys = ['A', 'B', 'C', 'D']
-            
-            for i, text in enumerate(opt_texts):
-                if i < len(mapping_keys):
-                    key = mapping_keys[i]
-                    new_options[key] = text
-                    if text == correct_text:
-                        new_correct_key = key
-            
-            # d. Aggiorna la domanda copiata
-            q_copy['options'] = new_options
-            q_copy['correct'] = new_correct_key
-            # -----------------------------
+            # --- SHUFFLE LOGIC ---
+            if do_shuffle:
+                original_opts = q['options']
+                correct_key = q['correct'] 
+                correct_text = original_opts.get(correct_key)
+                
+                opt_texts = list(original_opts.values())
+                random.shuffle(opt_texts)
+                
+                new_options = {}
+                new_correct_key = correct_key 
+                mapping_keys = ['A', 'B', 'C', 'D']
+                
+                for i, text in enumerate(opt_texts):
+                    if i < len(mapping_keys):
+                        key = mapping_keys[i]
+                        new_options[key] = text
+                        if text == correct_text:
+                            new_correct_key = key
+                
+                q_copy['options'] = new_options
+                q_copy['correct'] = new_correct_key
+            # ---------------------
 
             if q['id'] in st.session_state.seen_ids:
                 q_copy['status_tag'] = "OLD"
@@ -300,10 +297,10 @@ if not st.session_state.exam_started:
 
     with col1:
         if st.button("🚀 Quick Test (10 questions)", disabled=disable_start, type="primary"):
-            start_exam(10, selected_pool, current_label)
+            start_exam(10, selected_pool, current_label, shuffle_enabled)
     with col2:
         if st.button("📝 Full Exam (33 questions)", disabled=disable_start):
-            start_exam(33, selected_pool, current_label)
+            start_exam(33, selected_pool, current_label, shuffle_enabled)
 
 # --- 2. EXAM INTERFACE ---
 elif not st.session_state.submitted:
