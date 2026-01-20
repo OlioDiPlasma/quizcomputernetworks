@@ -332,7 +332,7 @@ Option A: Based on services from the Application layer.
 Option B: Based on services provided by the Network layer.
 Option C: Based on services provided by the Session layer.
 Correct Answer: B
-Motivation: Repeat of Question 5. The Transport layer sits above the Network layer and utilizes its services (routing, addressing) to provide end-to-end data delivery to the layers above.
+Motivation: Repeat of Quiz 5. The Transport layer sits above the Network layer and utilizes its services (routing, addressing) to provide end-to-end data delivery to the layers above.
 Question 47
 Question: The header of a data packet in a packet-switched network with datagram service contains:
 Option A: Source and destination node addresses.
@@ -1040,9 +1040,9 @@ Motivation: Ethernet frames have strict size limits:
 (Note: Modern "Jumbo Frames" allow more, but the standard definition is 64-1518).
 Question 136
 Question: Which of the following statements is true?
-Option A: In the commercial Ethernet standard (CSMA/CD), a minimum packet size was defined to guarantee correct collision identification.
-Option B: Minimum size distinguishes from IEEE 802.3.
-Option C: Minimum size guarantees better performance.
+Option A: In the commercial Ethernet standard (CSMA/CD access protocols), a minimum packet size was defined to ensure correct collision identification
+Option B: n the commercial Ethernet standard (CSMA/CD access protocol), a minimum packet size was defined to distinguish packets from those of the IEEE 802.3 standard.
+Option C: In the commercial Ethernet standard (CSMA/CD access protocol), a minimum packet size was defined to guarantee better performance, in terms of throughput, for the access protocol compared to what would be obtained with maximum size packets.
 Correct Answer: A
 Motivation: This reinforces Question 132/135. The minimum frame size ensures that the transmission time ($T_{trans}$) is longer than the Round Trip Time ($RTT$) of the network. If a frame were smaller than this, a collision could occur at the far end of the cable, but the sender would stop transmitting before the collision signal (jam) propagates back, leading the sender to falsely believe the transmission was successful.
 Question 137
