@@ -355,7 +355,7 @@ Option A: Uses Go-Back-N.
 Option B: Uses address field to distinguish user/operator.
 Option C: Uses a known sequence of bits to delimit data units.
 Correct Answer: C
-Motivation: Repeat of Question 35/36. PPP uses the flag 01111110 for framing delimitation.
+Motivation: Repeat of Quiz 35/36. PPP uses the flag 01111110 for framing delimitation.
 Question 50
 Question: An IP router, after calculating routing:
 Option A: Modifies source and destination IP addresses.
