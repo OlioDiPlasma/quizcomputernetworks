@@ -1,10 +1,6 @@
 import streamlit as st
 import re
 import random
-import os
-import json
-import uuid
-import extra_streamlit_components as stx
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="Network Exam Simulation", layout="wide")
@@ -33,38 +29,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# --- PERSISTENCE LOGIC (COOKIE & FILES) ---
-# ==========================================
-
-USER_DATA_FOLDER = "user_data"
-if not os.path.exists(USER_DATA_FOLDER):
-    os.makedirs(USER_DATA_FOLDER)
-
-def get_manager():
-    return stx.CookieManager()
-
-def load_user_history(user_uuid):
-    """Carica i seen_ids dal file JSON specifico dell'utente."""
-    file_path = os.path.join(USER_DATA_FOLDER, f"{user_uuid}.json")
-    if os.path.exists(file_path):
-        try:
-            with open(file_path, 'r') as f:
-                data = json.load(f)
-                return set(data.get("seen_ids", []))
-        except:
-            return set()
-    return set()
-
-def save_user_history(user_uuid, seen_ids):
-    """Salva i seen_ids nel file JSON specifico dell'utente."""
-    file_path = os.path.join(USER_DATA_FOLDER, f"{user_uuid}.json")
-    try:
-        with open(file_path, 'w') as f:
-            json.dump({"seen_ids": list(seen_ids)}, f)
-    except Exception as e:
-        st.error(f"Error saving history: {e}")
-
 # --- PARSING FUNCTIONS ---
 @st.cache_data
 def load_questions(filename):
@@ -85,6 +49,7 @@ def load_questions(filename):
         q_data = {}
         q_data['id'] = q_id
         
+        # Regex per catturare il testo della domanda
         q_match = re.search(r'Question:\s*(.*?)\s*Option A:', raw, re.DOTALL)
         if not q_match: continue
         q_data['text'] = q_match.group(1).strip()
@@ -116,6 +81,7 @@ def load_categories(filename):
         return {}
 
     current_cat = "Uncategorized"
+    
     for line in lines:
         line = line.strip()
         if not line: continue
@@ -129,25 +95,10 @@ def load_categories(filename):
                 if current_cat not in categories:
                     categories[current_cat] = []
                 categories[current_cat].extend(ids)
+                
     return categories
 
-# --- INIT COOKIE & USER ---
-cookie_manager = get_manager()
-# Tentiamo di leggere il cookie. Nota: stx.CookieManager a volte richiede un rerun per settarsi.
-user_id = cookie_manager.get(cookie="net_exam_uid")
-
-if not user_id:
-    # Genera nuovo ID
-    new_id = str(uuid.uuid4())
-    cookie_manager.set("net_exam_uid", new_id, expires_at=None)
-    # Rerun necessario affinché il cookie sia leggibile al prossimo giro
-    st.stop()
-
 # --- APP STATE ---
-if 'seen_ids' not in st.session_state:
-    # Carica dal file JSON usando l'ID del cookie
-    st.session_state.seen_ids = load_user_history(user_id)
-
 if 'exam_started' not in st.session_state:
     st.session_state.exam_started = False
 if 'selected_questions' not in st.session_state:
@@ -156,6 +107,8 @@ if 'submitted' not in st.session_state:
     st.session_state.submitted = False
 if 'user_answers' not in st.session_state:
     st.session_state.user_answers = {}
+if 'seen_ids' not in st.session_state:
+    st.session_state.seen_ids = set()
 if 'last_result' not in st.session_state:
     st.session_state.last_result = None
 if 'current_exam_label' not in st.session_state:
@@ -197,7 +150,8 @@ if not st.session_state.exam_started:
         ])
         
         st.markdown("---")
-        shuffle_enabled = st.checkbox("🔀 Shuffle Answers", value=False, help="Randomize options (A,B,C,D).")
+        # CHECKBOX PER ATTIVARE/DISATTIVARE LO SHUFFLE
+        shuffle_enabled = st.checkbox("🔀 Shuffle Answers", value=False, help="Randomize the order of options (A, B, C, D) to prevent memorizing positions.")
     
     selected_pool = []
     current_label = "Random Mode" 
@@ -216,7 +170,7 @@ if not st.session_state.exam_started:
                 st.warning("Please select at least one category.")
                 current_label = "No Category Selected"
 
-        # --- B. LOGICA SEQUENTIAL ---
+        # --- B. LOGICA SEQUENTIAL (CHUNKS) ---
         elif mode == "Sequential (Chunks of 33)":
             chunk_size = 33
             total_qs = len(questions_db)
@@ -233,7 +187,7 @@ if not st.session_state.exam_started:
             else:
                 st.error("Main database is empty.")
 
-        # --- C. LOGICA EXTRA ---
+        # --- C. LOGICA EXTRA QUESTIONS ---
         elif mode == "Extra Questions (Separate Pool)":
             selected_pool = []
             if extra_db:
@@ -245,7 +199,7 @@ if not st.session_state.exam_started:
             else:
                 st.warning("File 'domextra.txt' not found or empty.")
 
-        # --- D. LOGICA RANDOM ---
+        # --- D. LOGICA RANDOM CLASSICA ---
         else:
             selected_pool = questions_db
             current_label = "Random Mode (All Topics)"
@@ -256,15 +210,11 @@ if not st.session_state.exam_started:
         seen_in_pool = len(pool_ids.intersection(st.session_state.seen_ids))
         remaining = len(selected_pool) - seen_in_pool
         
-        st.caption(f"📊 Selection Stats: Total **{len(selected_pool)}** | ✅ Seen: **{seen_in_pool}** | 🆕 Unseen: **{remaining}**")
+        st.caption(f"📊 Stats for selection: Total **{len(selected_pool)}** | Seen: **{seen_in_pool}** | Unseen: **{remaining}**")
         
-        # Reset Logic
         if seen_in_pool > 0:
             if st.button("🧹 Reset Memory (Forget seen questions)"):
-                # 1. Pulisce la sessione
                 st.session_state.seen_ids = set()
-                # 2. Salva il set vuoto nel file JSON
-                save_user_history(user_id, st.session_state.seen_ids)
                 st.rerun()
 
     st.divider()
@@ -280,7 +230,7 @@ if not st.session_state.exam_started:
             return
         
         if n > len(pool):
-            st.toast(f"⚠️ Pool has only {len(pool)} questions. Exam reduced.")
+            st.toast(f"⚠️ Pool has only {len(pool)} questions. Exam reduced to {len(pool)}.")
             n = len(pool)
         
         st.session_state.current_exam_label = label_text
@@ -299,9 +249,9 @@ if not st.session_state.exam_started:
             needed = n - len(unseen_qs)
             if needed > 0:
                 selection_raw += random.sample(seen_qs, needed)
-                st.toast(f"⚠️ Added {needed} older questions to fill the exam.")
+                st.toast(f"⚠️ Only {len(unseen_qs)} new questions available. Added {needed} older ones.")
         
-        # 3. Mescolamento Opzioni e Tagging
+        # 3. Mescolamento Opzioni (Opzionale) e Tagging
         final_selection = []
         for q in selection_raw:
             q_copy = q.copy()
@@ -336,12 +286,9 @@ if not st.session_state.exam_started:
                 q_copy['status_tag'] = "NEW"
             final_selection.append(q_copy)
 
-        # 4. Aggiorna la memoria globale E SALVA SU FILE
+        # 4. Aggiorna la memoria globale
         for q in final_selection:
             st.session_state.seen_ids.add(q['id'])
-        
-        # <--- SALVATAGGIO PERSISTENTE
-        save_user_history(user_id, st.session_state.seen_ids) 
 
         st.session_state.selected_questions = final_selection
         st.session_state.exam_started = True
@@ -422,7 +369,13 @@ else:
         correct_opt = q['correct']
         
         with col_left:
-            st.markdown(f"### Q{idx+1} <span style='font-size:0.8em; color:gray'>(ID: {q['id']})</span>", unsafe_allow_html=True)
+            if q.get('status_tag') == "NEW":
+                badge = "<span style='background-color:#d4edda; color:#155724; padding: 2px 6px; border-radius: 4px; font-size: 0.7em;'>NEW</span>"
+            else:
+                badge = "<span style='background-color:#fff3cd; color:#856404; padding: 2px 6px; border-radius: 4px; font-size: 0.7em;'>REV</span>"
+
+            st.markdown(f"### Q{idx+1} {badge} <span style='font-size:0.8em; color:gray'>(ID: {q['id']})</span>", unsafe_allow_html=True)
+            
             st.info(q['text'])
             opts = ["No answer"] + [f"{k}) {v}" for k, v in q['options'].items()]
             try:
@@ -450,11 +403,14 @@ else:
         st.divider()
 
     if st.button("🔄 Restart Exam", type="primary"):
+        # --- SALVATAGGIO DATI PRIMA DEL RESET ---
         st.session_state.last_result = {
             "score": final_score,
             "total": max_score,
             "label": st.session_state.current_exam_label
         }
+        # ----------------------------------------
+        
         st.session_state.exam_started = False
         st.session_state.submitted = False
         st.session_state.user_answers = {}
