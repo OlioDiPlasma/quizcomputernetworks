@@ -1387,16 +1387,14 @@ Option D: Is necessary to allow the receiver node to synchronize its clock with 
 Correct Answer: D
 Motivation: The preamble is a pattern of alternating 1s and 0s (10101010...) sent at the start of the frame. It gives the receiver's hardware time to "wake up" and lock its Phase Locked Loop (PLL) to the incoming signal frequency (Bit Synchronization) before the actual frame data begins.
 Question 180
-Question: Two IP stations configured with IPs 130.192.2.1/24 and 130.192.40.200/24:
+Question: Two IP stations configured with IPs 130.192.40.1/24 and 130.192.40.200/24:
 Option A: Do not have valid IP addresses.
 Option B: Can exchange IP packets directly.
 Option C: Can exchange IP packets only via a router.
 Option D: Cannot exchange IP packets.
-Correct Answer: C
+Correct Answer: B
 Motivation:
-                     * Host A Network: 130.192.2.0/24
-                     * Host B Network: 130.192.40.0/24
-Since the Network IDs (first 3 bytes) are different, the hosts are on different subnets. Therefore, they cannot communicate directly (Layer 2); they must send traffic to a Default Gateway (Router) to be routed between the networks. (Note: The source document might mark B as correct implies a specific context like Proxy ARP or Layer 2 transparency, but standard IP networking requires a router).
+Since the Network IDs (first 3 bytes) are equal, the hosts are on the same subnet. Therefore, they can communicate directly (Layer 2); otherwise they must send traffic to a Default Gateway (Router) to be routed between the networks. 
 Question 181
 Question: SMTP:
 Option A: Is used by a mail client to fetch a message from a server.
@@ -2029,12 +2027,7 @@ Option B: The source sends packet 6.
 Option C: No action.
 Option D: The source retransmits packet 2.
 Correct Answer: B
-Motivation:
-                                       * Window size = 5. Initially sends [1, 2, 3, 4, 5]. Window is full.
-                                       * Receiver sends ACK 2. In cumulative ACK conventions (standard TCP style or "Next Expected"), ACK 2 usually means "I received 1, expecting 2". However, in some academic contexts (ISO), ACK N confirms N. Let's assume the latter or the "Next Expected" logic carefully.
-                                       * If ACK 2 means "Expecting 2": The window slides by 1 (pkt 1 confirmed). New window allows sending pkt 6.
-                                       * If ACK 2 means "Confirmed 2" (Cumulative 1 & 2): Window slides by 2. New window allows sending 6 and 7.
-                                       * Given the options, sending packet 6 is the only logical "progress" step. The receipt of the ACK slides the window, opening a slot for the next new packet (6).
+Motivation: ACK 2 is cumulative, confirming the successful receipt of previous packets (1 and 2) and sliding the window forward. This opens the window for new transmissions, authorizing the source to immediately send the next packet in the sequence, which is PDU 6.
 Question 258
 Question: Eliminating a bidirectional channel from a ring topology, the resulting topology:
 Option A: Becomes a tree topology (specifically a linear/chain topology).
@@ -2244,12 +2237,7 @@ Option B: The source sends PDUs 3 and 4.
 Option C: The source sends PDUs 4 and 5.
 Option D: The source sends nothing else and awaits timeout.
 Correct Answer: C
-Motivation:
-                                          * Window size = 3. Initial window: [1, 2, 3]. Source sends 1, 2, 3.
-                                          * ACK 3 received. In cumulative ACK (standard "next expected" usually implies expecting 3, but if the answer implies sending 4/5, it treats ACK 3 as "Confirmed up to 3" or "Expecting 4"? Let's analyze the options).
-                                          * If ACK 3 = "Received up to 2, Expecting 3": Window slides to start at 3. New window [3, 4, 5]. Since 3 was already sent, source can send 4 and 5.
-                                          * If ACK 3 = "Received up to 3" (Inclusive): Window slides to start at 4. New window [4, 5, 6]. Source sends 4, 5, 6.
-                                          * Option C says "Sends 4 and 5". This fits the logic where the window slides by 2 slots (confirming 1 and 2), allowing 2 new packets (4 and 5) to enter the window. This aligns with ACK 3 meaning "Expecting 3" or "Confirming 2". (Or if ACK 3 confirmed 3, it would send 4,5,6. Sending just 4,5 is a safe subset). Given "ACK 3" often means "I want 3", verifying 1 and 2, the window slides [1,2,3] -> [3,4,5]. 3 is already sent. 4 and 5 are new. Answer C matches this best.
+Motivation: ACK 3 cumulatively confirms that PDUs 1, 2, and 3 arrived safely, causing the window to slide forward by three positions. This opens the window for new data, allowing the source to immediately transmit the next packets in the sequence (4 and 5). If timeout expired then 1,2,3
 Question 281
 Question: Which field in the IP header is used to prevent a packet from being forwarded by more than N routers?
 Option A: Destination Address.
